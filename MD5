@@ -1,0 +1,17 @@
+d3629b101651691a8007e3951c84ef20 *DESCRIPTION
+699a7c04925c195ff29738e293b2203b *INDEX
+7e975748f408739080a215a638b55081 *NAMESPACE
+910f316fde4551c1ed7ba7e20c7819ee *R/KenRog-General.R
+84505535bc4e7d0e3a02b84b5240f59b *R/KenRog-linearAlgebra.R
+b67329abd4050efe4785be5e5958ca8b *R/KenRog-modcomp_init.R
+f9f45d93c93bb7747143136741b7b16a *R/KenRog-utils.R
+6e001115d147cb5857985f45fe64a0b6 *R/PB_ParmBoot.R
+7289d3bc33a9b1e17664fc51453334e1 *R/PB_anova.R
+307f6b9bb2ab42c4c407f2622c360bef *data/beets.txt.gz
+3461fd7ca9ed8bc1754e217a83565b4d *man/KenRog-modcomp_init.Rd
+ad22f9c7a1461687412e38c7865653b9 *man/KenRog.Rd
+702b663ee1b4d0098555ae02b9ba066e *man/PB_PBmodcomp.Rd
+2b7ebc652b7fcf7a4ecafd6dd9fbfdbd *man/PB_PBrefdist.Rd
+5fe2a5261aa8b6f2fd34d34908339c31 *man/beets.Rd
+b4e6868f6ce2e952932b6488c4d61c17 *man/parbokenro-internal.Rd
+9185ad50bbd0df930610015824351bdd *pbkrtest-Ex.R
