@@ -35,10 +35,11 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0) {
 
 
     L<- if   ( 'mer' %in% class(smallModel) ) {
-        .fatAB(smallModel@X,largeModel@X)
+      .fatAB(smallModel@X,largeModel@X)
     } else {
-        smallModel
+      smallModel
     }
+
 
 
     ## check wethter the the rows of L are linear depende
@@ -76,143 +77,138 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0) {
 
 .KRmodcompPrimitive<-function(largeModel,L, beta0) {
 
-    largeModel<-largeModel
     X<-largeModel@X
-
-
-    Phi<-vcov(largeModel)
-    GGamma<-VarCorr(largeModel)
-
-
-    ncol.X <- ncol(X)
-    nrow.X <- nrow(X)
+    
+    Phi    <- vcov(largeModel)
+    GGamma <- VarCorr(largeModel)
                                         # s -> n.varcomp
     n.groupFac<- largeModel@dims['nt'] #= number of random effects terms (..|..)
                                         # (..|F1) + (..|F1) are group factors!
                                         # without the residual variance
-
-
+    
     ## size of the symmetric variance Gamma_i for reach groupFac
-
-    nn.GGamma<- integer(n.groupFac)
-    ggamma<-NULL
-    for (  ii in 1: (n.groupFac)) {
-        Lii<-GGamma[[ii]]
-        nu<-ncol(Lii)
-        nn.GGamma[ii]<- nu
-        ## The lower.tri construxtion esnures, that (because Lii is symmetric!)
-        ## Lii[lower.tri(Lii,diag=TRUE)= Lii[1,1],Lii[1,2],Lii[1,3]..Lii[1,nu],
-        ##                               Lii[2,2], Lii[2,3] ...
-        ggamma<-c(ggamma,Lii[lower.tri(Lii,diag=TRUE)])
+    nn.GGamma <- integer(n.groupFac)
+    ggamma <- NULL
+    for (ii in 1: (n.groupFac)) {
+      Lii<-GGamma[[ii]]
+      nu<-ncol(Lii)
+      nn.GGamma[ii]<- nu
+      ## The lower.tri construxtion esnures, that (because Lii is symmetric!)
+      ## Lii[lower.tri(Lii,diag=TRUE)= Lii[1,1],Lii[1,2],Lii[1,3]..Lii[1,nu],
+      ##                               Lii[2,2], Lii[2,3] ...
+      ggamma<-c(ggamma,Lii[lower.tri(Lii,diag=TRUE)])
     }
-                                        # number of variance parameters of each GGamma_i
+    
+    ## number of variance parameters of each GGamma_i
     mm.GGamma<- nn.GGamma * (nn.GGamma+1)/2
-                                        #adding the residuals variance to ggamma
-                                        #so in ggamma nd n.ggamma the residual variance is included!
+    ##adding the residuals variance to ggamma
+    ##so in ggamma nd n.ggamma the residual variance is included!
     ggamma<-c(ggamma,attr(GGamma,'sc')^2)
     n.ggamma<-length(ggamma)
     ##
     group.index<-largeModel@Gp
-    nn.groupFac<-diff(group.index)#number of random effects in each groupFac
-                                        #residual error here excluded!
+    nn.groupFac<-diff(group.index)      # number of random effects in each groupFac
+                                        # residual error here excluded!
     nn.groupFacLevels<-nn.groupFac/nn.GGamma
 
     Zt<-largeModel@Zt
     ## Sigma:
     G<-Omega<-NULL
     for (ss in 1:n.groupFac)
-    {
+      {
         zIndex.sub<-group.index[ss]+
-            1+c(0:(nn.GGamma[ss]-1))*nn.groupFacLevels[ss] +
-                rep(0:(nn.groupFacLevels[ss]-1),each=nn.GGamma[ss])
+          1+c(0:(nn.GGamma[ss]-1))*nn.groupFacLevels[ss] +
+            rep(0:(nn.groupFacLevels[ss]-1),each=nn.GGamma[ss])
         ##ZZ<-Zt[ (index.nn.group[ss]+1):index.nn.group[ss+1], ]
         ZZ<-Zt[zIndex.sub, ]
+        #cat("dim(ZZ)"); print(dim(ZZ))
         Ig<-sparseMatrix(1:nn.groupFacLevels[ss],
                          1:nn.groupFacLevels[ss],x=1)
-
-
-        for (rr in 1: mm.GGamma[ss] )
-        {
+        #cat("dim(Ig)"); print(dim(Ig))
+        
+        for (rr in 1:mm.GGamma[ss] )
+          {
             ii.jj<-.indexVec2Symmat(rr,nn.GGamma[ss])
             ii.jj<-unique(ii.jj)
             EE<-if (length(ii.jj)==1)
-            {
+              {
                 sparseMatrix(ii.jj,ii.jj,x=1,dims=rep(nn.GGamma[ss],2))
-            }
+              }
             else
-            {
+              {
                 sparseMatrix(ii.jj,ii.jj[2:1],dims=rep(nn.GGamma[ss],2))
-            }
+              }
+            #cat("dim(EE)"); print(dim(EE))
             EE<-Ig%x%EE
+            #cat("dim(EE)"); print(dim(EE))
             G<-c(G,list(t(ZZ)%*% EE %*% ZZ))
-        }
-    }
-
-
-    G<-c(G,list(sparseMatrix(1:nrow.X,1:nrow.X,x=1)))
+          }
+      }
+    
+    G<-c(G,list(sparseMatrix(1:nrow(X),1:nrow(X),x=1)))
     ##Error ?? before (28.04.2010): Sigma<-G[[1]]<- ggamma[1]*G[[1]]
     Sigma<-ggamma[1]*G[[1]]
     for (ii in 2:n.ggamma) {
-        Sigma<- Sigma + ggamma[ii] * G[[ii]]
+      Sigma<- Sigma + ggamma[ii] * G[[ii]]
     }
+    
+    #cat(sprintf("n.ggamma=%f\n", n.ggamma))    
+    #SigmaInv<-solve(forceSymmetric(Sigma))
+    SigmaInv <- chol2inv(chol(forceSymmetric(Sigma)))
+    #cat("dim(SigmaInv)"); print(dim(SigmaInv))
+   
 
-
-    SigmaInv<-solve(forceSymmetric(Sigma))
-
-
+    Ktrace <- matrix(NA,n.ggamma,n.ggamma)
     for (ii in 1:n.ggamma) {
-        Omega<- c(Omega,list(-1 * SigmaInv %*% G[[ii]] %*% SigmaInv))
-    }
+      SigInv.ii.G <- SigmaInv %*% G[[ii]]
+      Omega       <- c(Omega,list(-1 * SigInv.ii.G %*% SigmaInv))
+      ##SigInv.ii.G <- crossprod(SigmaInv, G[[ii]])
+      for (jj in c(ii:n.ggamma)) {
+        #Ktrace[ii,jj]<- Ktrace[jj,ii]<- sum((SigmaInv%*% G[[ii]]) * (t(G[[jj]]) %*% SigmaInv))
+        #Ktrace[ii,jj] <- Ktrace[jj,ii]<- sum(SigInv.ii.G * (t(G[[jj]]) %*% SigmaInv))
+        Ktrace[ii,jj] <- Ktrace[jj,ii]<- sum(SigInv.ii.G *  tcrossprod(G[[jj]], SigmaInv))
+      }}
 
-    P<-NULL
-    Q<-NULL
+    
+    P <- Q <-NULL
     for (ii in 1:n.ggamma) {
-        P<-c(P,list(forceSymmetric( t(X) %*% Omega[[ii]] %*% X)))
-    }
-
-    for (ii in 1:n.ggamma) {
-        for (jj in c(1:n.ggamma)) {
-            k<- Omega[[ii]] %*% Sigma %*% Omega[[jj]]
-            Q<- c(Q,list(t(X) %*% k %*% X ))
-        }}
-
-
-
-    Ktrace<-matrix(NA,n.ggamma,n.ggamma)
-    for (ii in 1:n.ggamma) {
-        for (jj in c(ii:n.ggamma)) {
-            Ktrace[ii,jj]<- Ktrace[jj,ii]<- sum( (SigmaInv%*% G[[ii]])
-                                                * (t(G[[jj]]) %*% SigmaInv))
-        }}
+      Om.ii.Sigma <- Omega[[ii]] %*% Sigma
+      P <- c(P, list(forceSymmetric( t(X) %*% Omega[[ii]] %*% X)))
+      #Om.ii.Sigma <- crossprod(Omega[[ii]], Sigma)
+      for (jj in c(1:n.ggamma)) {
+        #k<- Omega[[ii]] %*% Sigma %*% Omega[[jj]]
+        #Om.ii.Sigma <- Omega[[ii]] %*% Sigma
+        k <- Om.ii.Sigma %*% Omega[[jj]]
+        #k<- tcrossprod(Om.ii.Sigma, Omega[[jj]])
+        Q<- c(Q,list(t(X) %*% k %*% X ))
+        #Q<- c(Q,list(crossprod(X,k) %*% X ))
+      }}
 
     IE2<-matrix(NA,n.ggamma,n.ggamma)
     for (ii in 1:n.ggamma) {
-        for (jj in c(1:n.ggamma)) {
-            IE2[ii,jj]<- Ktrace[ii,jj] - 2 * sum(Phi*Q[[.ij2r(ii,jj,n.ggamma)]]) +
-                sum( (Phi %*% P[[ii]]) * (  P[[jj]] %*% Phi))
-        }}
-
-
-    eigenIE2<-eigen(IE2,only.values=TRUE)$values
-    condi<-min(abs(eigenIE2))
-
+      Phi.P.ii <- Phi %*% P[[ii]]
+      for (jj in c(1:n.ggamma)) {
+        IE2[ii,jj]<- Ktrace[ii,jj] - 2 * sum(Phi*Q[[.ij2r(ii,jj,n.ggamma)]]) +
+          sum( Phi.P.ii * (  P[[jj]] %*% Phi))
+      }}
+    
+    eigenIE2 <- eigen(IE2,only.values=TRUE)$values
+    condi    <- min(abs(eigenIE2))
+    
     W<- if(condi>1e-10) forceSymmetric(2* solve(IE2)) else forceSymmetric(2* ginv(IE2))
     ##print('kenRog ginv W')
 
-    U<-matrix(0,ncol.X,ncol.X)
+    U<-matrix(0,ncol(X),ncol(X))
                                         # U is symmetric because Q[i,j,,]+Q[j,i,,] is symmetric
     for (ii in 1:n.ggamma) {
-        for (jj in c(1:n.ggamma)) {
-            U<- U+  W[ii,jj] * (Q[[.ij2r(ii,jj,n.ggamma)]]- P[[ii]] %*% Phi %*% P[[jj]])
-        }}
-
-    GGAMMA <- Phi %*% U %*% Phi
-
-
-
-    PhiA <-  Phi + 2* GGAMMA
-
-    Theta<- t(L) %*% solve( L %*% Phi %*% t(L), L)
+      for (jj in c(1:n.ggamma)) {
+        U<- U+  W[ii,jj] * (Q[[.ij2r(ii,jj,n.ggamma)]]- P[[ii]] %*% Phi %*% P[[jj]])
+      }}
+    
+    
+    GGAMMA <-  Phi %*% U %*% Phi
+    PhiA   <-  Phi + 2* GGAMMA
+    Theta  <-  t(L) %*% solve( L %*% Phi %*% t(L), L)
 
     A1<-A2<-0
     ThetaPhi<-Theta%*%Phi
@@ -224,9 +220,6 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0) {
             A1<- A1+  e* W[ii,jj] * (.spur(ui) * .spur(uj))
             A2<- A2+  e* W[ii,jj] *  sum(ui * t(uj))
         }}
-
-
-
 
 
     q<-rankMatrix(L)
