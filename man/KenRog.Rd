@@ -7,8 +7,8 @@
   approach.
 }
 \usage{
-KRmodcomp(largeModel, smallModel, beta0=0)
-\method{KRmodcomp}{mer}(largeModel, smallModel, beta0=0)
+KRmodcomp(largeModel, smallModel, beta0=0, details=0)
+\method{KRmodcomp}{mer}(largeModel, smallModel, beta0=0, details=0)
 }
 	
 \arguments{
@@ -17,7 +17,7 @@ KRmodcomp(largeModel, smallModel, beta0=0)
   \item{beta0}{A number or a vector of the beta of the hypothesis, 
     e.g. L beta=beta0. beta0=0 if modelSmall is a model not a
     restriction matrix.}
-%  \item{x}{A KRmodcomp object}
+  \item{details}{If larger than 0 some timing details are printed.}
   \item{\dots}{Additonal arguments to print function}	
 }
 
