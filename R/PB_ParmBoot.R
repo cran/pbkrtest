@@ -35,9 +35,14 @@ PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, d
   scale   <- v.tref/m.tref
   shape   <- m.tref^2/v.tref
   p.Ga    <- 1-pgamma(tobs, shape=shape, scale=scale)
+
+  ## Kernel density estimate
+  dd <- density(ref)
+  p.KD <- sum(dd$y[dd$x>=tobs])/sum(dd$y)
   
-  res <- list(c(lrt, p.BC=p.BC, BCstat=BCstat, m.tref=m.tref),
-              f.large=formula(largeModel), f.small=formula(smallModel))
+  
+##   res <- list(c(lrt, p.BC=p.BC, BCstat=BCstat, m.tref=m.tref),
+##               f.large=formula(largeModel), f.small=formula(smallModel))
 
   f.large <- formula(largeModel)
   attributes(f.large) <- NULL
@@ -48,6 +53,7 @@ PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, d
   ans <- list(type="X2test", f.large=f.large, f.small=f.small,
               LRT      = c(lrt),
               PBtest   = c(stat=tobs,    df=NA,  p.value=p.PB),
+              PBkd     = c(stat=tobs,    df=NA,  p.value=p.KD),
               Bartlett = c(stat=BCstat,  df=ndf, p.value=p.BC),
               Gamma    = c(stat=tobs,    df=NA,  p.value=p.Ga)
               )
