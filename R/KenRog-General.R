@@ -58,6 +58,7 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
     ## All computations are based on 'largeModel' and the restriction matrix 'L'
     ## -------------------------------------------------------------------------
 
+    t0 <- proc.time()
     stats <- .KRmodcompPrimitive(largeModel,L, beta0, details)
     formSmall <-
       if ('mer' %in% class(smallModel)){
@@ -71,6 +72,7 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
     attributes(formLarge) <- NULL
     
     res<-list(stats=stats,f.large=formLarge,f.small=formSmall)
+    attr(res,"ctime")  <- (proc.time()-t0)[1]
     class(res)<-c("KRmodcomp")
     res
 }
@@ -250,58 +252,83 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
   
   
   q <- rankMatrix(L)
-  B <- 1/(2*q) * (A1+6*A2)
+  B <- (1/(2*q)) * (A1+6*A2)
   g <- ( (q+1)*A1 - (q+4)*A2 )  / ((q+2)*A2)
   c1<- g/(3*q+ 2*(1-g))
-  c2<- (q-g) / (3*q + 2* (1-g))
+  c2<- (q-g) / (3*q + 2*(1-g))
   c3<- (q+2-g) / ( 3*q+2*(1-g))
-  
+#  cat(sprintf("q=%i B=%f A1=%f A2=%f\n", q, B, A1, A2))
+#  cat(sprintf("g=%f, c1=%f, c2=%f, c3=%f\n", g, c1, c2, c3))
 ###orgDef: E<-1/(1-A2/q)
 ###orgDef: V<- 2/q * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
+
+  ##EE     <- 1/(1-A2/q)
+  #VV     <- (2/q) * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
+  EE     <- 1 + (A2/q)
+  VV     <- (2/q)*(1+B)
+  EEstar <- 1/(1-A2/q)
+  VVstar <- (2/q)*((1+c1*B)/((1-c2*B)^2 * (1-c3*B)))
+#  cat(sprintf("EE=%f VV=%f EEstar=%f VVstar=%f\n", EE, VV, EEstar, VVstar))
   
   V0<-1+c1*B
   V1<-1-c2*B
   V2<-1-c3*B
   V0<-ifelse(abs(V0)<1e-10,0,V0)
-  
+#  cat(sprintf("V0=%f V1=%f V2=%f\n", V0, V1, V2)) 
   
 ###orgDef: V<- 2/q* V0 /(V1^2*V2)
 ###orgDef: rho <-  V/(2*E^2)
   
   rho <- 1/q * (.divZero(1-A2/q,V1))^2 * V0/V2
   df2 <- 4 + (q+2)/ (q*rho-1)
+#  cat(sprintf("rho=%f, df2=%f\n", rho, df2))
   
 ###orgDef: F.scaling <-  df2 /(E*(df2-2))
 ###altCalc F.scaling<- df2 * .divZero(1-A2/q,df2-2,tol=1e-12)
   ## this does not work because df2-2 can be about 0.1
   F.scaling<-ifelse( abs(df2-2)<1e-2, 1 , df2*(1-A2/q)/(df2-2))
   
-### The F-statistic
+### The F-statistic; scaled and unscaled
   betaDiff<-cbind(fixef(largeModel)-beta0)
+  Wald  <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%PhiA%*%t(L), L%*%betaDiff))
+  WaldU <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%Phi%*%t(L), L%*%betaDiff))
+#  cat(sprintf("Wald=%f WaldU=%f\n", Wald, WaldU))
   
-  Fstat<- F.scaling/q * t(betaDiff) %*% t(L) %*% solve(L%*%PhiA%*%t(L),L%*%betaDiff)
-  
-  Fstat<-as.numeric(Fstat)
-  pval<-pf(Fstat,df1=q,df2=df2,lower=FALSE)
-  
-### F-statistioc not multilplied by F.scaling
-  FstatU<- as.numeric(1/q * t(betaDiff) %*% t(L) %*% solve(L%*%PhiA%*%t(L),L%*%betaDiff))
-  pvalU<-pf(FstatU,df1=q,df2=df2,lower=FALSE)
-  
+  Fstat  <- F.scaling/q * Wald
+  pval   <- pf(Fstat,df1=q,df2=df2,lower=FALSE)
+  FstatU <- Wald/q
+  pvalU  <- pf(FstatU,df1=q,df2=df2,lower=FALSE)
+
+### SHD addition: calculate bartlett correction and gamma approximation
+###
+##   ## Bartlett correction - X2 distribution
+##   BCval   <- 1 / EE
+##   BCstat  <- BCval * Wald
+##   p.BC    <- 1-pchisq(BCstat,df=q)
+## #  cat(sprintf("Wald=%f BCval=%f BC.stat=%f p.BC=%f\n", Wald, BCval, BCstat, p.BC))
+##   ## Gamma distribution
+##   scale   <- q*VV/EE
+##   shape   <- EE^2/VV
+##   p.Ga    <- 1-pgamma(Wald, shape=shape, scale=scale)
+## #  cat(sprintf("shape=%f scale=%f p.Ga=%f\n", shape, scale, p.Ga))
+
   stats<-c(df1=q,df2=df2,Fstat=Fstat,
-           p.value=pval,F.scaling=F.scaling,FstatU=FstatU,p.value.U=pvalU,condi=condi,
-           A1=A1,A2=A2,V0=V0,V1=V1,V2=V2,rho=rho)
+           p.value=pval, F.scaling=F.scaling, FstatU=FstatU, p.value.U=pvalU, condi=condi,
+           A1=A1, A2=A2, V0=V0, V1=V1, V2=V2, rho=rho)
   attr(stats,"eigenIE")<-eigenIE2
   stats
+
 }
 
 
 
 print.KRmodcomp <- function(x,...){
-    cat("F-test with Kenward-Roger approximation \n")
-##     formLarge <- x$f.large
-##     attributes(formLarge) <- NULL
-    cat("large : ")
+
+    cat(sprintf("F-test with Kenward-Roger approximation; computing time: %.2f sec.\n",
+                attr(x,"ctime")))
+    ##     formLarge <- x$f.large
+    ##     attributes(formLarge) <- NULL
+    cat("Large : ")
     print(x$f.large)
     if (inherits(x$f.small,"call"))
     {

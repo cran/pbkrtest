@@ -19,96 +19,75 @@ PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, d
   lrt     <- .LRT_mer(largeModel, smallModel)
   tobs    <- unname(lrt['tobs'])
   ndf     <- unname(lrt['df'])
-  m.tref  <- mean(ref)
-  v.tref  <- var(ref)
+  EE      <- mean(ref)
+  VV      <- var(ref)
 
-
+  ##cat(sprintf("EE=%f VV=%f\n", EE, VV))
+  
   ## Direct computation of tail probability
   n.extreme <- sum(tobs < ref)
   p.PB  <- n.extreme / length(ref)
   
   ## Bartlett correction - X2 distribution
-  BCstat  <- ndf * tobs/m.tref
+  BCstat  <- ndf * tobs/EE
+  ##cat(sprintf("BCval=%f\n", ndf/EE))
   p.BC    <- 1-pchisq(BCstat,df=ndf)
   
   ## Fit to gamma distribution
-  scale   <- v.tref/m.tref
-  shape   <- m.tref^2/v.tref
+  scale   <- VV/EE
+  shape   <- EE^2/VV
   p.Ga    <- 1-pgamma(tobs, shape=shape, scale=scale)
 
   ## Kernel density estimate
   dd <- density(ref)
   p.KD <- sum(dd$y[dd$x>=tobs])/sum(dd$y)
-  
-  
-##   res <- list(c(lrt, p.BC=p.BC, BCstat=BCstat, m.tref=m.tref),
-##               f.large=formula(largeModel), f.small=formula(smallModel))
 
+  ## Match momtents to F-distribution
+  ##   rho  <- VV/(2*EE^2)
+  ##   ddf  <- (ndf*(4*rho+1) - 2)/(rho*ndf-1)
+  
+  ##   if (ddf>0 && rho>0){
+  ##     cat(sprintf("case1: rho=%f ddf=%f\n", rho, ddf))
+  ##     lam  <- (ddf/(ddf-2))/EE
+  ##     Fobs <-   lam * tobs
+  ##   } else {
+  ##     cat(sprintf("case2: rho=%f ddf=%f\n", rho, ddf))
+  ##     ddf  <- 2*EE/(EE-1)    
+  ##     Fobs <- tobs
+  ##   }
+
+  ddf  <- 2*EE/(EE-1)    
+  Fobs <- tobs
+  
+  #print(lam)
+  p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
+  
   f.large <- formula(largeModel)
   attributes(f.large) <- NULL
   f.small <- formula(smallModel)
   attributes(f.small) <- NULL
   
   names(lrt)[1] <- "stat"
-  ans <- list(type="X2test", f.large=f.large, f.small=f.small,
-              LRT      = c(lrt),
-              PBtest   = c(stat=tobs,    df=NA,  p.value=p.PB),
-              PBkd     = c(stat=tobs,    df=NA,  p.value=p.KD),
-              Bartlett = c(stat=BCstat,  df=ndf, p.value=p.BC),
-              Gamma    = c(stat=tobs,    df=NA,  p.value=p.Ga)
+  ans <- list(type="X2test",
+              f.large=f.large,
+              f.small=f.small,
+              test = list(
+                LRT      = c(c(lrt), ddf=NA),
+                PBtest   = c(stat=tobs,    df=NA,   p.value=p.PB, ddf=NA),
+                PBkd     = c(stat=tobs,    df=NA,   p.value=p.KD, ddf=NA),
+                Bartlett = c(stat=BCstat,  df=ndf,  p.value=p.BC, ddf=NA),
+                Gamma    = c(stat=tobs,    df=NA,   p.value=p.Ga, ddf=NA),
+                F        = c(stat=Fobs,    df=ndf,  p.value=p.FF, ddf=ddf)
+                )
               )
-  attr(ans,"moment") <- c(mean=m.tref, var=v.tref, nsim=nsim)
+
+  attr(ans,"moment") <- c(mean=EE, var=VV, nsim=nsim)
   attr(ans,"gamma")  <- c(scale=scale, shape=shape)
   attr(ans,"ref")    <- ref
-  ##attr(ans,"gamma2") <- c(scale=scale2, shape=shape2)
+  attr(ans,"ctime")  <- attr(ref,"ctime")
   class(ans) <- c("PBmodcomp", "XXmodcomp")
   ans
 }
-
-
-##########################################################
-###
-### Parametric bootstrap anova
-###
-##########################################################
-
-## PBmodcomp <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, details=0){
-##   UseMethod("PBmodcomp")
-## }
-
-## PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, details=0){
-
-##   if (is.null(ref)){
-##     ref <- PBrefdist.mer(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
-##   } else {
-##     nsim <- length(ref)
-##   }
-  
-##   lrt   <- .LRT_mer(largeModel, smallModel)
-##   tobs  <- unname(lrt['tobs'])
-##   ndf   <- unname(lrt['df'])
-
-##   m.tref  <- mean(ref)
-##   v.tref  <- var(ref)
-
-##   n.extreme <- sum(tobs < ref)
-##   p.PB  <- n.extreme / length(ref)
-
-##   f.large <- formula(largeModel)
-##   attributes(f.large) <- NULL
-##   f.small <- formula(smallModel)
-##   attributes(f.small) <- NULL
-
-##   names(lrt)[1] <- "stat"  
-##   ans <- list(type="PBtest",  f.large=f.large,   f.small=f.small,
-##               LRT = c(lrt),
-##               PBtest=c(stat=tobs,    df=NA, p.value=p.PB)
-##               )
-##   attr(ans,"moment") <- c(mean=m.tref, var=v.tref, nsim=nsim)
-##   class(ans) <- "XXmodcomp"
-##   ans
-## }
-
 
 
 ### ###########################################################
@@ -117,24 +96,28 @@ PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, d
 ###
 ### ###########################################################
 
-
 print.XXmodcomp <- function(x, ...){
 
-    cat("large : "); print(x$f.large)
-    cat("small : "); print(x$f.small)
-
-    cat(sprintf("Number of parametric bootstrap samples: %i\n",
-                attr(x,"moment")['nsim']))
-    ans      <- as.data.frame(do.call(rbind, x[-c(1:3)]))
-    ans$p.value    <-round(ans$p.value,options("digits")$digits)
-    ans$stat <-round(ans$stat,options("digits")$digits)
-
-    print(ans)
+  cat(sprintf("Parametric bootstrap test; bootstrap samples: %i computing time: %.2f sec.\n",
+              attr(x,"moment")['nsim'], round(attr(x,"ctime"),2)  ))
+  
+  cat("large : "); print(x$f.large)
+  cat("small : "); print(x$f.small)
+  
+                                        #ans      <- as.data.frame(do.call(rbind, x[-c(1:3)]))
+  ans      <- as.data.frame(do.call(rbind, x$test))
+  ans$p.value    <-round(ans$p.value,options("digits")$digits)
+  ans$ddf        <-round(ans$ddf, 3)
+  ans$stat       <-round(ans$stat,options("digits")$digits)
+  
+  print(ans)
 }
 
 
 plot.XXmodcomp <- function(x, ...){
 
+  test <- x$test
+  tobs <- test$LRT['stat']
   ref <- attr(x,"ref")
   rr  <- range(ref)
   xx  <- seq(rr[1],rr[2],0.1)
@@ -143,13 +126,15 @@ plot.XXmodcomp <- function(x, ...){
   sh  <- mean(ref)^2/var(ref)
   
   hist(ref, prob=TRUE,nclass=20, main="Reference distribution")
-  abline(v=x$LRT['stat'])
+  abline(v=tobs)
   lines(dd, lty=2, col=2, lwd=2)
-  lines(xx,dchisq(xx,df=x$LRT['df']), lty=3, col=3, lwd=2)
-  lines(xx,dgamma(xx,scale=sc, shape=sh ), lty=4, col=4, lwd=2)
+  lines(xx,dchisq(xx,df=test$LRT['df']), lty=3, col=3, lwd=2)
+  lines(xx,dgamma(xx,scale=sc, shape=sh), lty=4, col=4, lwd=2)
+  lines(xx,df(xx,df1=test$F['df'], df2=test$F['ddf']), lty=5, col=5, lwd=2)
   
-  smartlegend(x = 'center', y = 'top',
-              legend = c("kernel density", "chi-square", "gamma"), col = 2:4, lty = 2:4)
+  smartlegend(x = 'right', y = 'top',
+              legend = c("kernel density", "chi-square", "gamma","F"),
+              col = 2:5, lty = 2:5)
   
 }
 
@@ -243,10 +228,11 @@ PBrefdist.mer <- function(largeModel, smallModel, nsim=200, cl=NULL, details=0){
     }
     
     ref <- ref[ref>0]
-    
+    ctime <- (proc.time()-t0)[3]
+    attr(ref,"ctime") <- ctime
     if (details>0)
       cat(sprintf("Reference distribution with %i samples; computing time: %5.2f secs. \n",
-                  length(ref), (proc.time()-t0)[3]))
+                  length(ref), ctime))
     
     ref
 }
@@ -337,3 +323,49 @@ stopPBcluster <- function(){
 ##   class(ans) <- "XXmodcomp"
 ##   ans
 ## }
+
+
+
+##########################################################
+###
+### Parametric bootstrap anova
+###
+##########################################################
+
+## PBmodcomp <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, details=0){
+##   UseMethod("PBmodcomp")
+## }
+
+## PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, details=0){
+
+##   if (is.null(ref)){
+##     ref <- PBrefdist.mer(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
+##   } else {
+##     nsim <- length(ref)
+##   }
+  
+##   lrt   <- .LRT_mer(largeModel, smallModel)
+##   tobs  <- unname(lrt['tobs'])
+##   ndf   <- unname(lrt['df'])
+
+##   m.tref  <- mean(ref)
+##   v.tref  <- var(ref)
+
+##   n.extreme <- sum(tobs < ref)
+##   p.PB  <- n.extreme / length(ref)
+
+##   f.large <- formula(largeModel)
+##   attributes(f.large) <- NULL
+##   f.small <- formula(smallModel)
+##   attributes(f.small) <- NULL
+
+##   names(lrt)[1] <- "stat"  
+##   ans <- list(type="PBtest",  f.large=f.large,   f.small=f.small,
+##               LRT = c(lrt),
+##               PBtest=c(stat=tobs,    df=NA, p.value=p.PB)
+##               )
+##   attr(ans,"moment") <- c(mean=m.tref, var=v.tref, nsim=nsim)
+##   class(ans) <- "XXmodcomp"
+##   ans
+## }
+

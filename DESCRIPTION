@@ -1,5 +1,5 @@
 Package: pbkrtest
-Version: 0.1.3
+Version: 0.2.0
 Title: Parametric bootstrap and Kenward Roger based methods for mixed
         model comparison
 Author: Ulrich Halekoh <ulrich.halekoh@agrsci.dk> Søren Højsgaard <sorenh@mail.dk>
@@ -9,6 +9,6 @@ Depends: MASS,lme4,Matrix,snow,gplots
 Encoding: latin1
 ZipData: no
 License: GPL (>= 2)
-Packaged: 2011-12-05 22:10:57 UTC; SHD
+Packaged: 2011-12-29 23:22:29 UTC; shd
 Repository: CRAN
-Date/Publication: 2011-12-06 07:00:34
+Date/Publication: 2011-12-30 16:26:44

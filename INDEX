@@ -1,8 +1,0 @@
-contrDiff               Contrasts for model with interactions
-dfResid                 Ftest and degrees of freedom based on
-                        Satterthwaite approximation
-KenRog                  Ftest and degrees of freedom based on
-                        Kenward-Roger approximation
-lsmeans                 Lsmeans in context of interactions
-mainInteract            Utility functions
-spur                    Linear Algebra

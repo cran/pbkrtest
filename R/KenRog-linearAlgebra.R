@@ -10,7 +10,15 @@
 .fatAB<-function(A,B) {
   ## <A> in <B>
   ## determine L such that  <A>={Bb| b in Lb=0}
-  
+# let QR be the QR desoposition of matrix A|B
+# whre A|B means horizontal concatenation
+# such that Q=(Q1,Q2) where
+# <Q1>= <A>
+# then Bb= Q1 x1 + Q2 x2
+# for some x1 and x2 and
+#  <A> = {Q1 x1 + Q2 x2 | x2=0}
+# since
+#Q1=    
   d<-qr(cbind(A,B))$rank - qr(B)$rank
   if (d>0) {
     print('Error:  <A> not subspace of <B> ')
