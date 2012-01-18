@@ -42,25 +42,39 @@ PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, d
   dd <- density(ref)
   p.KD <- sum(dd$y[dd$x>=tobs])/sum(dd$y)
 
-  ## Match momtents to F-distribution
-  ##   rho  <- VV/(2*EE^2)
-  ##   ddf  <- (ndf*(4*rho+1) - 2)/(rho*ndf-1)
-  
-  ##   if (ddf>0 && rho>0){
-  ##     cat(sprintf("case1: rho=%f ddf=%f\n", rho, ddf))
-  ##     lam  <- (ddf/(ddf-2))/EE
-  ##     Fobs <-   lam * tobs
-  ##   } else {
-  ##     cat(sprintf("case2: rho=%f ddf=%f\n", rho, ddf))
-  ##     ddf  <- 2*EE/(EE-1)    
-  ##     Fobs <- tobs
-  ##   }
+  ## Fit to F-distribution
+##   ddf  <- 2*EE/(EE-1)     
+##   Fobs <- tobs
+##   p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
 
-  ddf  <- 2*EE/(EE-1)    
-  Fobs <- tobs
-  
-  #print(lam)
+##   rho   <- VV/(2*EE^2)
+##   ddf2  <- (ndf*(4*rho+1) - 2)/(rho*ndf-1)
+##   lam2  <- (ddf/(ddf-2))/EE
+##   Fobs2 <- lam2 * tobs
+##   if (ddf2>0)
+##     p.FF2 <- 1-pf(Fobs, df1=ndf, df2=ddf2)
+##   else
+##     p.FF2 <- NA
+
+  # Fit T/d to F-distribution
+
+  ddf  <- 2*EE/(EE-ndf)     
+  Fobs <- tobs/ndf
   p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
+##   rho   <- VV/(2*EE^2)
+##   ddf2  <- (ndf*(4*rho+1) - 2)/(rho*ndf-1)
+##   lam2  <- (ddf/(ddf-2))/(EE/ndf)
+##   print(lam2)
+##   Fobs2 <- lam2 * tobs/ndf
+##   if (ddf2>0)
+##     p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)
+##   else
+##     p.FF2 <- NA
+
+
+  
+
+
   
   f.large <- formula(largeModel)
   attributes(f.large) <- NULL
@@ -73,11 +87,12 @@ PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, d
               f.small=f.small,
               test = list(
                 LRT      = c(c(lrt), ddf=NA),
-                PBtest   = c(stat=tobs,    df=NA,   p.value=p.PB, ddf=NA),
-                PBkd     = c(stat=tobs,    df=NA,   p.value=p.KD, ddf=NA),
-                Bartlett = c(stat=BCstat,  df=ndf,  p.value=p.BC, ddf=NA),
-                Gamma    = c(stat=tobs,    df=NA,   p.value=p.Ga, ddf=NA),
-                F        = c(stat=Fobs,    df=ndf,  p.value=p.FF, ddf=ddf)
+                PBtest   = c(stat=tobs,    df=NA,   p.value=p.PB,  ddf=NA),
+                PBkd     = c(stat=tobs,    df=NA,   p.value=p.KD,  ddf=NA),
+                Bartlett = c(stat=BCstat,  df=ndf,  p.value=p.BC,  ddf=NA),
+                Gamma    = c(stat=tobs,    df=NA,   p.value=p.Ga,  ddf=NA),
+                F        = c(stat=Fobs,    df=ndf,  p.value=p.FF,  ddf=ddf)
+#                F2       = c(stat=Fobs2,   df=ndf,  p.value=p.FF2, ddf=ddf2)
                 )
               )
 

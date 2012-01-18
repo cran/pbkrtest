@@ -1,3 +1,10 @@
+2011-01-17 Søren Højsgaard <sorenh@mail.dk>
+
+	* F-distribution estimate of reference distribution for parametric
+	bootstrap corrected.
+
+	* Version 0.2.1 uploaded.		
+	
 2011-12-30 Søren Højsgaard <sorenh@mail.dk>
 
  	* F-distribution estimate of reference distribution for parametric
