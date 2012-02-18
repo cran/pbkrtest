@@ -1,6 +1,7 @@
 \name{PBrefdist}
 \alias{PBrefdist}
 \alias{PBrefdist.mer}
+\alias{PBrefdist.lm}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -12,6 +13,7 @@
 }
 \usage{
 PBrefdist(largeModel, smallModel, nsim = 200, cl = NULL, details = 0)
+\method{PBrefdist}{lm}(largeModel, smallModel, nsim = 200, cl = NULL, details = 0)
 \method{PBrefdist}{mer}(largeModel, smallModel, nsim = 200, cl = NULL, details = 0)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -60,8 +62,8 @@ A numeric vector
 \seealso{
   \code{\link{PBmodcomp}},
 %  \code{\link{BCmodcomp}},
-  \code{\link{makePBcluster}},
-  \code{\link{stopPBcluster}},
+%  \code{\link{makePBcluster}},
+%  \code{\link{stopPBcluster}},
   \code{\link{KRmodcomp}}
 }
 \examples{
@@ -76,7 +78,6 @@ rr
 
 ## Computations can be made in parallel using several processors:
 \dontrun{
-library(snow)
 cl <- makeSOCKcluster(rep("localhost", 4))
 clusterEvalQ(cl, library(lme4))
 clusterSetupSPRNG(cl)

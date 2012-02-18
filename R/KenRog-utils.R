@@ -1,8 +1,8 @@
 .makeSparse<-function(X) {
-    X<-as.matrix(X)
-    w<-cbind(c(row(X)),c(col(X)),c(X))
-    w<-w[abs(w[,3])>1e-16,,drop=FALSE]
-    Y<-sparseMatrix(w[,1],w[,2],x=w[,3],dims=dim(X))
+  X<-as.matrix(X)
+  w<-cbind(c(row(X)),c(col(X)),c(X))
+  w<-w[abs(w[,3])>1e-16,,drop=FALSE]
+  Y<-sparseMatrix(w[,1],w[,2],x=w[,3],dims=dim(X))
 }
 
 
@@ -10,7 +10,7 @@
 ## and R=c(A[1,1],A[1,2]...A[1,n],A[2,1]..A[2,n],, A[n,n]
 ## A[i,j]=R[r]
 .ij2r<-function(i,j,N)
-    (i-1)*N+j
+  (i-1)*N+j
 
 .indexSymmat2vec <- function(i,j,N) {
   ## S[i,j] symetric N times N matrix
@@ -45,3 +45,17 @@
   x.y
 }
 
+
+.is.lmm <- function(object) {
+#checks whether  object is
+#- mer object  AND
+#- linear mixed model
+  if (class(object) %in% "mer") {
+    if (length(object@muEta)==0 )
+      TRUE
+    else
+      FALSE
+  } else {
+    FALSE
+  }
+}

@@ -23,7 +23,7 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
 
 
     ## refitting large model with REML if necessary
-    ##!!! NEED to check that a gaussian mixed model is fitted
+    ## in modcomp_inmitmit is checked that legreModel is  a gaussian gaussian mixed model 
     largeModel<-
         if (largeModel@dims['REML'] == 1)
         {
@@ -35,31 +35,13 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
         }
 
 
-    L<- if   ( 'mer' %in% class(smallModel) ) {
-      .fatAB(smallModel@X,largeModel@X)
-    } else {
-      smallModel
-    }
+    L<- .createRestrictionMatrix(largeModel,smallModel)
 
-
-
-    ## check wethter the the rows of L are linear depende
-    ## if this is the case, a row.reduced L with
-    ## linear independen rows is constructed
-    ## this is neceaasre to avoid singlur L %*% Phi t(L)
-
-    q<-rankMatrix(L)
-
-    if (q < nrow(L) ){
-      L<-t(qr.Q(qr(t(L)))[,1:qr(L)$rank])
-    }
-    L<-.makeSparse(L)
-
-    ## All computations are based on 'largeModel' and the restriction matrix 'L'
+    ## All further computations are based on 'largeModel' and the restriction matrix 'L'
     ## -------------------------------------------------------------------------
 
     t0 <- proc.time()
-    stats <- .KRmodcompPrimitive(largeModel,L, beta0, details)
+    stats <- .KRmodcompPrimitive(largeModel, L, beta0, details)
     formSmall <-
       if ('mer' %in% class(smallModel)){
         .zzz <- formula(smallModel)
@@ -78,11 +60,22 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
 }
 
 
+
+
 .KRmodcompPrimitive<-function(largeModel, L, beta0, details) {
+  PhiA<-vcovAdj(largeModel, details)
+  .KR_adjust(PhiA, Phi=vcov(largeModel), L, beta=fixef(largeModel), beta0 )
+}
 
+vcovAdj <- function(largeModel, details) {
+  if(!.is.lmm(largeModel)) {
+    cat("Error in vccovAdj\n")
+    cat(sprintf("largeModel is not a linear mixed moxed model fittedt with lmer\n"))
+    stop()
+  }
   DB <- details>0
-
-  X<-largeModel@X
+  
+  X<-getME(largeModel,"X")
   
   Phi    <- vcov(largeModel)
   GGamma <- VarCorr(largeModel)
@@ -106,20 +99,21 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
   
   ## number of variance parameters of each GGamma_i
   mm.GGamma<- nn.GGamma * (nn.GGamma+1)/2
+
   ##adding the residuals variance to ggamma
   ##so in ggamma nd n.ggamma the residual variance is included!
   ggamma<-c(ggamma,attr(GGamma,'sc')^2)
   n.ggamma<-length(ggamma)
   
   ##
-  group.index<-largeModel@Gp
+  group.index<-getME(largeModel,"Gp")
   nn.groupFac<-diff(group.index)
   
   ## number of random effects in each groupFac
   ## residual error here excluded!
   nn.groupFacLevels<-nn.groupFac/nn.GGamma
   
-  Zt<-largeModel@Zt
+  Zt<-getME(largeModel,"Zt")
   ## G_r:
   
   t0 <- proc.time()
@@ -227,8 +221,8 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
       U <- U + W[ii,jj] * (Q[[.indexSymmat2vec(ii,jj,n.ggamma)]] -
                            P[[ii]] %*% Phi %*% P[[jj]])
     }}
-
-  ### FIXME: Ulrich: Er det ikke sådan, at du her får beregnet diagonalen med to gange???
+  
+### FIXME: Ulrich: Er det ikke sådan, at du her får beregnet diagonalen med to gange???
   U<-U+t(U) 
   
   for (ii in 1:n.ggamma) {
@@ -237,10 +231,19 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
   
   GGAMMA <-  Phi %*% U %*% Phi
   PhiA   <-  Phi + 2* GGAMMA
+  attr(PhiA,"P")<-P
+  attr(PhiA,"W")<-W
+  PhiA
+}
+
+.KR_adjust <- function(PhiA,Phi,L,beta,beta0){  
   Theta  <-  t(L) %*% solve( L %*% Phi %*% t(L), L)
+  P<-attr(PhiA,"P")
+  W<-attr(PhiA,"W")
   
   A1<-A2<-0
   ThetaPhi<-Theta%*%Phi
+  n.ggamma<-length(P)
   for (ii in 1:n.ggamma) {
     for (jj in c(ii:n.ggamma)) {
       e<-ifelse(ii==jj, 1, 2)
@@ -257,31 +260,31 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
   c1<- g/(3*q+ 2*(1-g))
   c2<- (q-g) / (3*q + 2*(1-g))
   c3<- (q+2-g) / ( 3*q+2*(1-g))
-#  cat(sprintf("q=%i B=%f A1=%f A2=%f\n", q, B, A1, A2))
-#  cat(sprintf("g=%f, c1=%f, c2=%f, c3=%f\n", g, c1, c2, c3))
+                                        #  cat(sprintf("q=%i B=%f A1=%f A2=%f\n", q, B, A1, A2))
+                                        #  cat(sprintf("g=%f, c1=%f, c2=%f, c3=%f\n", g, c1, c2, c3))
 ###orgDef: E<-1/(1-A2/q)
 ###orgDef: V<- 2/q * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
-
+  
   ##EE     <- 1/(1-A2/q)
-  #VV     <- (2/q) * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
+                                        #VV     <- (2/q) * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
   EE     <- 1 + (A2/q)
   VV     <- (2/q)*(1+B)
   EEstar <- 1/(1-A2/q)
   VVstar <- (2/q)*((1+c1*B)/((1-c2*B)^2 * (1-c3*B)))
-#  cat(sprintf("EE=%f VV=%f EEstar=%f VVstar=%f\n", EE, VV, EEstar, VVstar))
+                                        #  cat(sprintf("EE=%f VV=%f EEstar=%f VVstar=%f\n", EE, VV, EEstar, VVstar))
   
   V0<-1+c1*B
   V1<-1-c2*B
   V2<-1-c3*B
   V0<-ifelse(abs(V0)<1e-10,0,V0)
-#  cat(sprintf("V0=%f V1=%f V2=%f\n", V0, V1, V2)) 
+                                        #  cat(sprintf("V0=%f V1=%f V2=%f\n", V0, V1, V2)) 
   
 ###orgDef: V<- 2/q* V0 /(V1^2*V2)
 ###orgDef: rho <-  V/(2*E^2)
   
   rho <- 1/q * (.divZero(1-A2/q,V1))^2 * V0/V2
   df2 <- 4 + (q+2)/ (q*rho-1)
-#  cat(sprintf("rho=%f, df2=%f\n", rho, df2))
+                                        #  cat(sprintf("rho=%f, df2=%f\n", rho, df2))
   
 ###orgDef: F.scaling <-  df2 /(E*(df2-2))
 ###altCalc F.scaling<- df2 * .divZero(1-A2/q,df2-2,tol=1e-12)
@@ -289,16 +292,16 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
   F.scaling<-ifelse( abs(df2-2)<1e-2, 1 , df2*(1-A2/q)/(df2-2))
   
 ### The F-statistic; scaled and unscaled
-  betaDiff<-cbind(fixef(largeModel)-beta0)
+  betaDiff<-cbind(beta-beta0)
   Wald  <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%PhiA%*%t(L), L%*%betaDiff))
   WaldU <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%Phi%*%t(L), L%*%betaDiff))
-#  cat(sprintf("Wald=%f WaldU=%f\n", Wald, WaldU))
+                                        #  cat(sprintf("Wald=%f WaldU=%f\n", Wald, WaldU))
   
   Fstat  <- F.scaling/q * Wald
-  pval   <- pf(Fstat,df1=q,df2=df2,lower=FALSE)
+  pval   <- pf(Fstat,df1=q,df2=df2,lower.tail=FALSE)
   FstatU <- Wald/q
-  pvalU  <- pf(FstatU,df1=q,df2=df2,lower=FALSE)
-
+  pvalU  <- pf(FstatU,df1=q,df2=df2,lower.tail=FALSE)
+  
 ### SHD addition: calculate bartlett correction and gamma approximation
 ###
 ##   ## Bartlett correction - X2 distribution
@@ -313,13 +316,11 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
 ## #  cat(sprintf("shape=%f scale=%f p.Ga=%f\n", shape, scale, p.Ga))
 
   stats<-c(df1=q,df2=df2,Fstat=Fstat,
-           p.value=pval, F.scaling=F.scaling, FstatU=FstatU, p.value.U=pvalU, condi=condi,
+           p.value=pval, F.scaling=F.scaling, FstatU=FstatU, p.value.U=pvalU,
            A1=A1, A2=A2, V0=V0, V1=V1, V2=V2, rho=rho)
-  attr(stats,"eigenIE")<-eigenIE2
   stats
 
 }
-
 
 
 print.KRmodcomp <- function(x,...){

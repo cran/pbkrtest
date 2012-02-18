@@ -1,10 +1,12 @@
 \name{PBmodcomp}
 \alias{PBmodcomp}
+\alias{PBmodcomp.lm}
 \alias{PBmodcomp.mer}
-%\alias{BCmodcomp}
-%\alias{BCmodcomp.mer}
-\alias{makePBcluster}
-\alias{stopPBcluster}
+\alias{getLRT}
+\alias{getLRT.lm}
+\alias{getLRT.mer}
+% \alias{makePBcluster}
+% \alias{stopPBcluster}
 \alias{plot.XXmodcomp}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
@@ -18,9 +20,10 @@
 %BCmodcomp(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
 %\method{BCmodcomp}{mer}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
 PBmodcomp(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
+\method{PBmodcomp}{lm}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
 \method{PBmodcomp}{mer}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
-makePBcluster(n=2)
-stopPBcluster()
+%makePBcluster(n=2)
+%stopPBcluster()
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -45,10 +48,10 @@ stopPBcluster()
     calculating the reference distribution using several cores. See
     examples below.
   }
-  \item{n}{
-    Number of clusters to be used in computations; a typical choice of
-    \code{n} would be the number of CPUs available.
-  }
+%   \item{n}{
+%     Number of clusters to be used in computations; a typical choice of
+%     \code{n} would be the number of CPUs available.
+%   }
   \item{details}{
     The amount of output produced. Mainly relevant for debugging
     purposes.
@@ -104,9 +107,15 @@ PBmodcomp(beet0, beet_no.harv, nsim=20)
 \dontrun{
 ## Vanilla
 PBmodcomp(beet0, beet_no.harv)
+
 ## Simulate reference distribution separately:
 rr <- PBrefdist(beet0, beet_no.harv, nsim=20)
 PBmodcomp(beet0, beet_no.harv, ref=rr)
+
+## Do computations with multiple processors:
+cl <- makeSOCKcluster(rep("localhost", 4))
+PBmodcomp(beet0, beet_no.harv, cl=cl)
+stopCluster(cl)
 }
 
 }
