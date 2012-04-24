@@ -6,7 +6,7 @@ Kenward and Roger (1997) describbe an improved small sample approximation to
 the covariance matrix estimate of the fixed parameters in a linear mixed model.
 }
 \usage{
-vcovAdj(largeModel, details)
+vcovAdj(largeModel, details=0)
 }
 	
 \arguments{

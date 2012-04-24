@@ -31,12 +31,14 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
         }
         else
         {
+		    warning("\n largeModel has been refitted with REML=TRUE \n")
             update(largeModel,.~.,REML=TRUE)
         }
 
 
     L<- .createRestrictionMatrix(largeModel,smallModel)
 
+    
     ## All further computations are based on 'largeModel' and the restriction matrix 'L'
     ## -------------------------------------------------------------------------
 
@@ -67,13 +69,27 @@ KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
   .KR_adjust(PhiA, Phi=vcov(largeModel), L, beta=fixef(largeModel), beta0 )
 }
 
-vcovAdj <- function(largeModel, details) {
+vcovAdj <- function(largeModel, details=0) {
   if(!.is.lmm(largeModel)) {
     cat("Error in vccovAdj\n")
     cat(sprintf("largeModel is not a linear mixed moxed model fittedt with lmer\n"))
     stop()
   }
   DB <- details>0
+
+    ## refitting large model with REML if necessary
+    ## in modcomp_inmitmit is checked that legreModel is  a gaussian gaussian mixed model 
+    largeModel<-
+        if (largeModel@dims['REML'] == 1)
+        {
+            largeModel
+        }
+        else
+        {
+		    warning("\n largeModel has been refitted with REML=TRUE \n")
+            update(largeModel,.~.,REML=TRUE)
+		}
+
   
   X<-getME(largeModel,"X")
   
@@ -253,7 +269,7 @@ vcovAdj <- function(largeModel, details) {
       A2<- A2+  e* W[ii,jj] *  sum(ui * t(uj))
     }}
   
-  
+
   q <- rankMatrix(L)
   B <- (1/(2*q)) * (A1+6*A2)
   g <- ( (q+1)*A1 - (q+4)*A2 )  / ((q+2)*A2)

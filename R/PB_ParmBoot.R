@@ -73,7 +73,10 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
   
   ## Direct computation of tail probability
   n.extreme <- sum(tobs < ref)
-  p.PB  <- n.extreme / length(ref)
+  p.PB  <- n.extreme / nsim
+
+  se <- round(sqrt(p.PB*(1-p.PB)/nsim),4)
+  ci <- round(c(-1.96, 1.96)*se + p.PB,4)
 
   ## Kernel density estimate
   dd <- density(ref)
@@ -94,6 +97,31 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
   Fobs <- tobs/ndf
   p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
 
+
+  
+  
+  ans <- list(type="X2test",
+              test = list(
+                LRT      = c(stat=tobs,    df=ndf,  p.value=p.chi, ddf=NA),
+                PBtest   = c(stat=tobs,    df=NA,   p.value=p.PB,  ddf=NA),
+                ##PBkd     = c(stat=tobs,    df=NA,   p.value=p.KD,  ddf=NA),
+                Gamma    = c(stat=tobs,    df=NA,   p.value=p.Ga,  ddf=NA),
+                F        = c(stat=Fobs,    df=ndf,  p.value=p.FF,  ddf=ddf),
+                Bartlett = c(stat=BCstat,  df=ndf,  p.value=p.BC,  ddf=NA)
+                ##F2       = c(stat=Fobs2,   df=ndf,  p.value=p.FF2, ddf=ddf2)
+                ))
+
+  attr(ans,"moment") <- c(mean=EE, var=VV, nsim=nsim)
+  attr(ans,"gamma")  <- c(scale=scale, shape=shape)
+  attr(ans,"ref")    <- ref
+  attr(ans,"ci")     <- ci
+  attr(ans,"se")     <- se
+  attr(ans,"ctime")  <- attr(ref,"ctime")
+  class(ans) <- c("PBmodcomp", "XXmodcomp")
+  ans
+}
+
+
 ##   rho   <- VV/(2*EE^2)
 ##   ddf2  <- (ndf*(4*rho+1) - 2)/(rho*ndf-1)
 ##   lam2  <- (ddf/(ddf-2))/(EE/ndf)
@@ -107,25 +135,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
 ##     p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)
 ##   else
 ##     p.FF2 <- NA
-  
-  ans <- list(type="X2test",
-              test = list(
-                LRT      = c(stat=tobs,    df=ndf,  p.value=p.chi, ddf=NA),
-                PBtest   = c(stat=tobs,    df=NA,   p.value=p.PB,  ddf=NA),
-                PBkd     = c(stat=tobs,    df=NA,   p.value=p.KD,  ddf=NA),
-                Gamma    = c(stat=tobs,    df=NA,   p.value=p.Ga,  ddf=NA),
-                Bartlett = c(stat=BCstat,  df=ndf,  p.value=p.BC,  ddf=NA),
-                F        = c(stat=Fobs,    df=ndf,  p.value=p.FF,  ddf=ddf)
-                ##F2       = c(stat=Fobs2,   df=ndf,  p.value=p.FF2, ddf=ddf2)
-                ))
 
-  attr(ans,"moment") <- c(mean=EE, var=VV, nsim=nsim)
-  attr(ans,"gamma")  <- c(scale=scale, shape=shape)
-  attr(ans,"ref")    <- ref
-  attr(ans,"ctime")  <- attr(ref,"ctime")
-  class(ans) <- c("PBmodcomp", "XXmodcomp")
-  ans
-}
 
 
 ### ###########################################################
@@ -158,6 +168,11 @@ print.XXmodcomp <- function(x, ...){
   ans$stat       <-round(ans$stat,options("digits")$digits)
   
   print(ans)
+
+  ci <- attr(x, "ci")
+  cat(sprintf("95 pct CI for PBtest: [%s]\n", toString(ci)))
+
+  return(invisible(x))
 }
 
 
@@ -231,7 +246,8 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=200, cl=NULL, details=0){
     if (details>=1)
       cat(sprintf("* Using %i clusters and %i samples per cluster\n", length(cl), nsim2))
     clusterExport(cl, ls(envir=.GlobalEnv), envir = .GlobalEnv)
-    clusterSetupSPRNG(cl)
+    #clusterSetupSPRNG(cl)
+    clusterSetRNGStream(cl)
     xxx <- clusterCall(cl, fun, largeModel, smallModel, nsim2)
     ref <- c(xxx, recursive=TRUE)
   }
@@ -279,7 +295,8 @@ PBrefdist.mer <- function(largeModel, smallModel, nsim=200, cl=NULL, details=0){
       if (details>=1)
         cat(sprintf("* Using %i clusters and %i samples per cluster\n", length(cl), nsim2))
       clusterEvalQ(cl, library(lme4))
-      clusterSetupSPRNG(cl)
+      ##clusterSetupSPRNG(cl)
+      clusterSetRNGStream(cl)
       xxx <- clusterCall(cl, fun, largeModel, smallModel, nsim2)
       ref <- c(xxx, recursive=TRUE)
     }

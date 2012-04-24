@@ -1,3 +1,19 @@
+2012-02-26 Ulrich Halekoh <ulrich.halekoh@agrsci.dk>
+
+	* function vcovAdj() refits the large model if fitted with REML=FALSE and prints a warning
+
+	* function KRmodcomp() refits the large model if fitted with REML=FALSE and prints a warning
+	
+2012-02-26 Ulrich Halekoh <ulrich.halekoh@agrsci.dk>
+
+
+	* function for linear algebra .fatBL changed to .matrixNullSpace and improved
+		
+	* function for linear algebra: .orthComplement simplified
+	
+	* function for linear algebra added .colSpaceCompare
+	
+
 2011-02-17 Søren Højsgaard <sorenh@mail.dk>
 
 	* Parametric bootstrap methods for lm/glm added
