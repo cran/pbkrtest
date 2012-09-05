@@ -18,15 +18,20 @@ modcomp_init(m1, m2, matrixOK)
     if TRUE m2 may also be a resteriction matrix}
 }
 \details{
-  the function checks whether m1 is an lmer model
+  The function checks whether m1 is an lmer model
   and m2 either an lmer model or a restriction matrix.
-  Fihtermore, it is checkes whether the fixed effects space of
+  Furthermore, it is checkes whether the fixed effects space of
   m2 is a subspace of m1.
   In the following <m1> is the fixed efects space of model m1.
 }
 \value{
   \item{code}{-1: <m1> =<m2>, 0: <m1> < <m2>, 1: <m1> > <m2>}  
 }
+
+\author{
+  Ulrich Halekoh \email{ulrich.halekoh@agrsci.dk}, Søren Højsgaard \email{sorenh@math.aau.dk}
+}
+
 \seealso{
   \code{\link{lmer}}.
 }

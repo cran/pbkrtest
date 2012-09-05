@@ -84,7 +84,7 @@ PBmodcomp(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0
 %  ## To be added...
 %}
 \author{
-  Søren Højsgaard <sorenh at mail dot dk>
+  Søren Højsgaard \email{sorenh@math.aau.dk}
 }
 \note{
   This functionality is not thoroughly tested and should be used with
@@ -106,15 +106,26 @@ PBmodcomp(beet0, beet_no.harv, nsim=20)
 
 \dontrun{
 ## Vanilla
-PBmodcomp(beet0, beet_no.harv)
+PBmodcomp(beet0, beet_no.harv, nsim=200)
 
 ## Simulate reference distribution separately:
-rr <- PBrefdist(beet0, beet_no.harv, nsim=20)
-PBmodcomp(beet0, beet_no.harv, ref=rr)
+refdist <- PBrefdist(beet0, beet_no.harv, nsim=200)
+PBmodcomp(beet0, beet_no.harv, ref=refdist)
 
 ## Do computations with multiple processors:
-cl <- makeSOCKcluster(rep("localhost", 4))
+## Number of cores:
+(nc <- detectCores())
+## Create clusters
+cl <- makeCluster(rep("localhost", nc))
+
+## Then do:
 PBmodcomp(beet0, beet_no.harv, cl=cl)
+
+## Or in two steps:
+refdist <- PBrefdist(beet0, beet_no.harv, nsim=200, cl=cl)
+PBmodcomp(beet0, beet_no.harv, ref=refdist)
+
+## It is recommended to stop the clusters before quitting R:
 stopCluster(cl)
 }
 

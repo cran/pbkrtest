@@ -27,10 +27,11 @@ modcomp_init.mer<-function(m1,m2,matrixOK=FALSE) {
     stop()
   }
   
-  Xlarge<-m1@X
+  Xlarge<-getME(m1, "X")
+  
   rlarge<-rankMatrix(Xlarge)
   code <- if ('mer' %in% class(m2)) {
-    Xsmall<-m2@X
+    Xsmall<-getME(m2,"X")
     rsmall<-rankMatrix(Xsmall)
     rboth<- rankMatrix(cbind(Xlarge,Xsmall))
     if (rboth == pmax(rlarge,rsmall)) {

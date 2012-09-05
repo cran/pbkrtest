@@ -4,65 +4,61 @@ KRmodcomp <- function(largeModel, smallModel,beta0=0, details=0){
 }
 
 KRmodcomp.mer<-function(largeModel,smallModel,beta0=0, details=0) {
-    ##smallModel can either be a lmer model or a restriction matrix L
+  ##smallModel can either be a lmer model or a restriction matrix L
+  
+  ## In modcomp_inmitmit is checked that largeModel is  a gaussian gaussian mixed model 
+  w <- modcomp_init(largeModel,smallModel,matrixOK=TRUE)
+  if (w==-1) {
+    stop('Models have either equal fixed mean stucture or are not nested')
+  }
+  if (w==0){
+    stop('First given model is submodel of second; exchange the models\n')
+  }
+  
+  ## Refitting large model with REML if necessary
+  if (!(getME(largeModel, "is_REML"))){
+    largeModel <- update(largeModel,.~.,REML=TRUE)
+  }
+  
+  ## All further computations are based on 'largeModel' and the restriction matrix 'L'
+  ## -------------------------------------------------------------------------
+  t0    <- proc.time()
+  L     <- .model2restrictionMatrix(largeModel, smallModel)    
+  stats <- .KRmodcompPrimitive(largeModel, L, beta0, details)
 
-    w <- modcomp_init(largeModel,smallModel,matrixOK=TRUE)
-    if (w==-1) {
-        print ('Error in KRmodcomp')
-        print( 'both models have either equal fixed mean stucture')
-        print( 'or are not nested')
-        stop()
+  f.small <-
+    if ('mer' %in% class(smallModel)){
+      .zzz <- formula(smallModel)
+      attributes(.zzz) <- NULL
+      .zzz
+    } else {
+      list(L=L, beta0=beta0)
     }
-    if (w==0){
-        print ('Error in KRmodcomp')
-        print( 'first given model is submodel of second')
-        print(' exchange the models')
-        stop()
-    }
+  f.large <- formula(largeModel)
+  attributes(f.large) <- NULL
+  
+  res <-list(stats=.finalizeKR(stats), f.large=f.large, f.small=f.small)
+  ans <- .finalizeKR(stats)
 
+  ans$f.large <- f.large
+  ans$f.small <- f.small
+  ans$ctime   <- (proc.time()-t0)[1]
+  ans$L       <- L
+  ans
 
-
-    ## refitting large model with REML if necessary
-    ## in modcomp_inmitmit is checked that legreModel is  a gaussian gaussian mixed model 
-    largeModel<-
-        if (largeModel@dims['REML'] == 1)
-        {
-            largeModel
-        }
-        else
-        {
-		    warning("\n largeModel has been refitted with REML=TRUE \n")
-            update(largeModel,.~.,REML=TRUE)
-        }
-
-
-    L<- .createRestrictionMatrix(largeModel,smallModel)
-
-    
-    ## All further computations are based on 'largeModel' and the restriction matrix 'L'
-    ## -------------------------------------------------------------------------
-
-    t0 <- proc.time()
-    stats <- .KRmodcompPrimitive(largeModel, L, beta0, details)
-    formSmall <-
-      if ('mer' %in% class(smallModel)){
-        .zzz <- formula(smallModel)
-        attributes(.zzz) <- NULL
-        .zzz
-      } else {
-        list(L=L,beta0=beta0)
-      }
-    formLarge <- formula(largeModel)
-    attributes(formLarge) <- NULL
-    
-    res<-list(stats=stats,f.large=formLarge,f.small=formSmall)
-    attr(res,"ctime")  <- (proc.time()-t0)[1]
-    class(res)<-c("KRmodcomp")
-    res
+##   res
 }
 
+.finalizeKR <- function(stats){
 
-
+  test = list(
+    Ftest      = c(stat=stats$Fstat,     df=stats$q,  ddf=stats$df2,  F.scaling=stats$F.scaling,  p.value=stats$p.value),
+    FtestU     = c(stat=stats$FstatU,    df=stats$q,  ddf=stats$df2,  F.scaling=NA,               p.value=stats$p.value.U))
+  test  <- as.data.frame(do.call(rbind, test))
+  ans   <- list(test=test, type="F", aux=stats$aux)
+  class(ans)<-c("KRmodcomp")
+  ans
+}
 
 .KRmodcompPrimitive<-function(largeModel, L, beta0, details) {
   PhiA<-vcovAdj(largeModel, details)
@@ -77,26 +73,20 @@ vcovAdj <- function(largeModel, details=0) {
   }
   DB <- details>0
 
-    ## refitting large model with REML if necessary
-    ## in modcomp_inmitmit is checked that legreModel is  a gaussian gaussian mixed model 
-    largeModel<-
-        if (largeModel@dims['REML'] == 1)
-        {
-            largeModel
-        }
-        else
-        {
-		    warning("\n largeModel has been refitted with REML=TRUE \n")
-            update(largeModel,.~.,REML=TRUE)
-		}
-
+  ## refitting large model with REML if necessary
+  ## in modcomp_inmitmit is checked that largeModel is  a gaussian gaussian mixed model 
+  
+  if (!(getME(largeModel, "is_REML"))){
+    #cat("\n largeModel has been refitted with REML=TRUE \n")
+    largeModel <- update(largeModel,.~.,REML=TRUE)
+  }
   
   X<-getME(largeModel,"X")
   
   Phi    <- vcov(largeModel)
   GGamma <- VarCorr(largeModel)
                                         # s -> n.varcomp
-  n.groupFac<- largeModel@dims['nt'] #= number of random effects terms (..|..)
+  n.groupFac<- getME(largeModel, "n_rtrms") #= number of random effects terms (..|..)
                                         # (..|F1) + (..|F1) are group factors!
                                         # without the residual variance
   
@@ -306,18 +296,71 @@ vcovAdj <- function(largeModel, details=0) {
 ###altCalc F.scaling<- df2 * .divZero(1-A2/q,df2-2,tol=1e-12)
   ## this does not work because df2-2 can be about 0.1
   F.scaling<-ifelse( abs(df2-2)<1e-2, 1 , df2*(1-A2/q)/(df2-2))
+
   
 ### The F-statistic; scaled and unscaled
   betaDiff<-cbind(beta-beta0)
   Wald  <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%PhiA%*%t(L), L%*%betaDiff))
   WaldU <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%Phi%*%t(L), L%*%betaDiff))
                                         #  cat(sprintf("Wald=%f WaldU=%f\n", Wald, WaldU))
-  
-  Fstat  <- F.scaling/q * Wald
-  pval   <- pf(Fstat,df1=q,df2=df2,lower.tail=FALSE)
   FstatU <- Wald/q
   pvalU  <- pf(FstatU,df1=q,df2=df2,lower.tail=FALSE)
   
+  #Fstat  <- F.scaling/q * Wald
+  Fstat  <- F.scaling * FstatU
+  pval   <- pf(Fstat,df1=q,df2=df2,lower.tail=FALSE)
+  
+
+  stats<-list(df1=q,df2=df2,
+              Fstat=Fstat, p.value=pval, F.scaling=F.scaling,
+              FstatU=FstatU, p.value.U=pvalU,
+              aux=c(A1=A1, A2=A2, V0=V0, V1=V1, V2=V2, rho=rho, F.scaling=F.scaling))
+
+  stats
+
+}
+
+
+
+print.KRmodcomp <- function(x,...){
+  
+  cat(sprintf("F-test with Kenward-Roger approximation; computing time: %.2f sec.\n",
+              x$ctime))
+  cat("large : ")
+  print(x$f.large)
+  
+  if (inherits(x$f.small,"call")){
+    cat("small : ")
+    print(x$f.small)
+  } else {
+    formSmall <- x$f.small
+    cat("small : L beta = beta0 \n")
+    cat('L=')
+    print(formSmall$L)
+    cat('beta0=')
+    print(formSmall$beta0)
+  }
+  
+  tab <- x$test
+  printCoefmat(tab, tst.ind=1, na.print='', has.Pvalue=TRUE)
+  F.scale <- x$aux['F.scaling']
+  
+  if (F.scale<0.2 & F.scale>0) {
+    cat('Note: The scaling factor for the F-statistic is smaller than 0.2 \n')
+    cat('The Unscaled statistic might be more reliable \n ')
+  } else {
+    if (F.scale<=0){
+      cat('Note: The scaling factor for the F-statistic is negative \n')
+      cat('Use the Unscaled statistic instead. \n ')
+    }        
+  }
+  
+  return(invisible(x))
+}
+
+
+
+
 ### SHD addition: calculate bartlett correction and gamma approximation
 ###
 ##   ## Bartlett correction - X2 distribution
@@ -330,58 +373,3 @@ vcovAdj <- function(largeModel, details=0) {
 ##   shape   <- EE^2/VV
 ##   p.Ga    <- 1-pgamma(Wald, shape=shape, scale=scale)
 ## #  cat(sprintf("shape=%f scale=%f p.Ga=%f\n", shape, scale, p.Ga))
-
-  stats<-c(df1=q,df2=df2,Fstat=Fstat,
-           p.value=pval, F.scaling=F.scaling, FstatU=FstatU, p.value.U=pvalU,
-           A1=A1, A2=A2, V0=V0, V1=V1, V2=V2, rho=rho)
-  stats
-
-}
-
-
-print.KRmodcomp <- function(x,...){
-
-    cat(sprintf("F-test with Kenward-Roger approximation; computing time: %.2f sec.\n",
-                attr(x,"ctime")))
-    ##     formLarge <- x$f.large
-    ##     attributes(formLarge) <- NULL
-    cat("Large : ")
-    print(x$f.large)
-    if (inherits(x$f.small,"call"))
-    {
-      cat("small : ")
-      print(x$f.small)
-    }
-    else {
-      formSmall <- x$f.small
-      cat("small : Lbeta=beta0")
-      cat('L=')
-      print(formSmall$L)
-      cat('beta0=')
-      print(formSmall$beta0)
-    }
-
-    stats<-x$stats
-##     cat(sprintf("df1=%3i, df2=%8.2f, Fstat=%8.2f, pval=%7.5f, Fscal= %4.3f \n",
-##                 stats['df1'], stats['df2'], stats['Fstat'], stats['pval'],
-##                 stats['F.scaling']) )
-
-    sss<-stats[c("Fstat","df1","df2","p.value","F.scaling")]
-    sss<-as.data.frame(as.list(sss))
-    
-    sss$p.value <-round(sss$p.value, options("digits")$digits)
-    sss$Fstat   <-round(sss$Fstat,   options("digits")$digits)
-
-    print(sss, row.names=FALSE)
-    
-##    print(as.data.frame(stats))
-    
-    if (stats['F.scaling']<0.2) {
-        cat('The scaling factor for the F-statistic is smaller than 0.2 \n')
-        cat('The unscaled statistic might be more reliable \n ')
-        cat('Results fromm the unscaled F-statistic \n')
-        cat(sprintf("df1=%3i, df2=%8.2f, FstatU=%8.2f, pvalU=%7.5f  \n",
-                    stats['df1'], stats['df2'], stats['FstatU'], stats['pvalU']))
-    }
-    return(invisible(x))
-}

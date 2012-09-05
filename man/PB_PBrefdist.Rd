@@ -12,9 +12,9 @@
     mixed effects models using parametric bootstrap 
 }
 \usage{
-PBrefdist(largeModel, smallModel, nsim = 200, cl = NULL, details = 0)
-\method{PBrefdist}{lm}(largeModel, smallModel, nsim = 200, cl = NULL, details = 0)
-\method{PBrefdist}{mer}(largeModel, smallModel, nsim = 200, cl = NULL, details = 0)
+PBrefdist(largeModel, smallModel, nsim = 200, seed=NULL, cl = NULL, details = 0)
+\method{PBrefdist}{lm}(largeModel, smallModel, nsim = 200, seed=NULL, cl = NULL, details = 0)
+\method{PBrefdist}{mer}(largeModel, smallModel, nsim = 200, seed=NULL, cl = NULL, details = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,6 +30,9 @@ PBrefdist(largeModel, smallModel, nsim = 200, cl = NULL, details = 0)
   }
   \item{nsim}{
     The number of simulations to form the reference distribution.
+  }
+  \item{seed}{
+    Seed for the random number generation.
   }
   \item{cl}{
     A vector identifying a cluster; used for
@@ -51,7 +54,7 @@ A numeric vector
 %% ~put references to the literature/web site here ~
 %}
 \author{
-  Søren Højsgaard <sorenh at mail dot dk>
+  Søren Højsgaard \email{sorenh@math.aau.dk}
 }
 %\note{
 %%  ~~further notes~~

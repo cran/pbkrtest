@@ -1,7 +1,6 @@
 pkgname <- "pbkrtest"
 source(file.path(R.home("share"), "R", "examples-header.R"))
 options(warn = 1)
-options(pager = "console")
 library('pbkrtest')
 
 assign(".oldSearch", search(), pos = 'CheckExEnv')
@@ -53,15 +52,26 @@ PBmodcomp(beet0, beet_no.harv, nsim=20)
 
 ## Not run: 
 ##D ## Vanilla
-##D PBmodcomp(beet0, beet_no.harv)
+##D PBmodcomp(beet0, beet_no.harv, nsim=200)
 ##D 
 ##D ## Simulate reference distribution separately:
-##D rr <- PBrefdist(beet0, beet_no.harv, nsim=20)
-##D PBmodcomp(beet0, beet_no.harv, ref=rr)
+##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200)
+##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
 ##D 
 ##D ## Do computations with multiple processors:
-##D cl <- makeSOCKcluster(rep("localhost", 4))
+##D ## Number of cores:
+##D (nc <- detectCores())
+##D ## Create clusters
+##D cl <- makeCluster(rep("localhost", nc))
+##D 
+##D ## Then do:
 ##D PBmodcomp(beet0, beet_no.harv, cl=cl)
+##D 
+##D ## Or in two steps:
+##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200, cl=cl)
+##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
+##D 
+##D ## It is recommended to stop the clusters before quitting R:
 ##D stopCluster(cl)
 ## End(Not run)
 
@@ -122,6 +132,55 @@ data(beets)
 beets$bh <- with(beets, interaction(block, harvest))
 summary(aov(yield~block+sow+harvest+Error(bh), beets))
 summary(aov(sugpct~block+sow+harvest+Error(bh), beets))
+
+
+
+cleanEx()
+nameEx("budworm")
+### * budworm
+
+flush(stderr()); flush(stdout())
+
+### Name: budworm
+### Title: Effect of Insecticide on survivial of tobacco budworms
+### Aliases: budworm
+### Keywords: datasets
+
+### ** Examples
+
+data(budworm)
+
+#function to caclulate the empirical logits
+empirical.logit<- function(nevent,ntotal) {
+y<-log ((nevent+0.5)/(ntotal-nevent+0.5))
+y
+}
+
+
+#plot the empirical logits against log-dose
+
+log.dose<-log(budworm$dose)
+emp.logit<-empirical.logit(budworm$ndead,budworm$ntotal)
+plot(log.dose,emp.logit,type='n',xlab='log-dose',ylab='emprirical logit')
+title('budworm: emprirical logits of probability to die ')
+male<-budworm$sex=='male'
+female<-budworm$sex=='female'
+lines(log.dose[male],emp.logit[male],type='b',lty=1,col=1)
+lines(log.dose[female],emp.logit[female],type='b',lty=2,col=2)
+legend(0.5,2,legend=c('male','female'),lty=c(1,2),col=c(1,2))
+
+
+
+
+
+## Not run: 
+##D * SAS example;
+##D data budworm;
+##D infile 'budworm.txt' firstobs=2;
+##D input sex dose ndead ntotal;
+##D run;
+## End(Not run)
+
 
 
 

@@ -47,9 +47,9 @@
 
 
 .is.lmm <- function(object) {
-#checks whether  object is
-#- mer object  AND
-#- linear mixed model
+  ##checks whether  object is
+  ## - mer object  AND
+  ## - linear mixed model
   if (class(object) %in% "mer") {
     if (length(object@muEta)==0 )
       TRUE
