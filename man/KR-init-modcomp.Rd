@@ -1,14 +1,17 @@
-\name{modcomp_init}
-\alias{modcomp_init}
-\alias{modcomp_init.mer}
+\name{KRmodcomp_init}
+\alias{KRmodcomp_init}
+\alias{KRmodcomp_init.mer}
+\alias{KRmodcomp_init.lmerMod}
+
 \title{Model input check}
 \description{
   Utility functions check the models for KRmodcomp.lmer function.
   Not to be used directly by the user
 }
 \usage{
-modcomp_init(m1, m2, matrixOK)
-\method{modcomp_init}{mer}(m1,m2,matrixOK=FALSE)
+KRmodcomp_init(m1, m2, matrixOK=FALSE)
+\method{KRmodcomp_init}{mer}(m1, m2, matrixOK=FALSE)
+\method{KRmodcomp_init}{lmerMod}(m1, m2, matrixOK=FALSE)
 }
 
 \arguments{

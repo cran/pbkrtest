@@ -1,120 +1,13 @@
 pkgname <- "pbkrtest"
 source(file.path(R.home("share"), "R", "examples-header.R"))
 options(warn = 1)
+options(pager = "console")
 library('pbkrtest')
 
 assign(".oldSearch", search(), pos = 'CheckExEnv')
 cleanEx()
-nameEx("KenRog")
-### * KenRog
-
-flush(stderr()); flush(stdout())
-
-### Name: KenwardRoger
-### Title: Ftest and degrees of freedom based on Kenward-Roger
-###   approximation
-### Aliases: KRmodcomp KRmodcomp.mer
-### Keywords: function
-
-### ** Examples
-
-(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
-## removing Day
-(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
-(KRmodcomp(fmLarge,fmSmall))
-
-## The same test using a restriction matrix
-L<-cbind(0,1)
-(KRmodcomp(fmLarge,L))
-
-
-
-cleanEx()
-nameEx("PB_PBmodcomp")
-### * PB_PBmodcomp
-
-flush(stderr()); flush(stdout())
-
-### Name: PBmodcomp
-### Title: Model comparison of mixed models using parametric bootstrap
-###   methods.
-### Aliases: PBmodcomp PBmodcomp.lm PBmodcomp.mer getLRT getLRT.lm
-###   getLRT.mer plot.XXmodcomp
-### Keywords: utilities models inference
-
-### ** Examples
-
-data(beets)
-head(beets)
-beet0<-lmer(sugpct~block+sow+harvest+(1|block:harvest), data=beets, REML=FALSE)
-beet_no.harv <- update(beet0, .~.-harvest)
-PBmodcomp(beet0, beet_no.harv, nsim=20)
-
-## Not run: 
-##D ## Vanilla
-##D PBmodcomp(beet0, beet_no.harv, nsim=200)
-##D 
-##D ## Simulate reference distribution separately:
-##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200)
-##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
-##D 
-##D ## Do computations with multiple processors:
-##D ## Number of cores:
-##D (nc <- detectCores())
-##D ## Create clusters
-##D cl <- makeCluster(rep("localhost", nc))
-##D 
-##D ## Then do:
-##D PBmodcomp(beet0, beet_no.harv, cl=cl)
-##D 
-##D ## Or in two steps:
-##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200, cl=cl)
-##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
-##D 
-##D ## It is recommended to stop the clusters before quitting R:
-##D stopCluster(cl)
-## End(Not run)
-
-
-
-
-cleanEx()
-nameEx("PB_PBrefdist")
-### * PB_PBrefdist
-
-flush(stderr()); flush(stdout())
-
-### Name: PBrefdist
-### Title: Calculate reference distribution using parametric bootstrap
-### Aliases: PBrefdist PBrefdist.mer PBrefdist.lm
-### Keywords: utilities models
-
-### ** Examples
-
-data(beets)
-head(beets)
-beet0<-lmer(sugpct~block+sow+harvest+(1|block:harvest), data=beets, REML=FALSE)
-beet_no.harv <- update(beet0, .~.-harvest)
-rr <- PBrefdist(beet0, beet_no.harv, nsim=20)
-rr
-
-## Note clearly many more than 10 simulations must be made in practice.
-
-## Computations can be made in parallel using several processors:
-## Not run: 
-##D cl <- makeSOCKcluster(rep("localhost", 4))
-##D clusterEvalQ(cl, library(lme4))
-##D clusterSetupSPRNG(cl)
-##D rr <- PBrefdist(beet0, beet_no.harv, nsim=20)
-##D stopCluster(cl)
-## End(Not run)
-## Above, 4 cpu's are used and 5 simulations are made on each cpu.
-
-
-
-cleanEx()
-nameEx("beets")
-### * beets
+nameEx("DATA-beets")
+### * DATA-beets
 
 flush(stderr()); flush(stdout())
 
@@ -136,8 +29,8 @@ summary(aov(sugpct~block+sow+harvest+Error(bh), beets))
 
 
 cleanEx()
-nameEx("budworm")
-### * budworm
+nameEx("DATA-budworm")
+### * DATA-budworm
 
 flush(stderr()); flush(stdout())
 
@@ -185,6 +78,149 @@ legend(0.5,2,legend=c('male','female'),lty=c(1,2),col=c(1,2))
 
 
 cleanEx()
+nameEx("KR-modcomp")
+### * KR-modcomp
+
+flush(stderr()); flush(stdout())
+
+### Name: KenwardRoger
+### Title: Ftest and degrees of freedom based on Kenward-Roger
+###   approximation
+### Aliases: KRmodcomp KRmodcomp.mer KRmodcomp.lmerMod
+### Keywords: function
+
+### ** Examples
+
+	(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+	## removing Days
+	(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+	anova(fmLarge,fmSmall)
+	KRmodcomp(fmLarge,fmSmall)
+
+## The same test using a restriction matrix
+L<-cbind(0,1)
+KRmodcomp(fmLarge, L)
+
+
+
+cleanEx()
+nameEx("PB-modcomp")
+### * PB-modcomp
+
+flush(stderr()); flush(stdout())
+
+### Name: PBmodcomp
+### Title: Model comparison of mixed models using parametric bootstrap
+###   methods.
+### Aliases: PBmodcomp PBmodcomp.lm PBmodcomp.mer PBmodcomp.lmerMod getLRT
+###   getLRT.lm getLRT.mer getLRT.lmerMod plot.XXmodcomp
+### Keywords: utilities models inference
+
+### ** Examples
+
+data(beets)
+head(beets)
+beet0<-lmer(sugpct~block+sow+harvest+(1|block:harvest), data=beets, REML=FALSE)
+beet_no.harv <- update(beet0, .~.-harvest)
+PBmodcomp(beet0, beet_no.harv, nsim=20)
+
+## Not run: 
+##D (fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+##D ## removing Days
+##D (fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+##D anova(fmLarge, fmSmall)
+##D PBmodcomp(fmLarge, fmSmall)
+##D 
+##D ## The same test using a restriction matrix
+##D L<-cbind(0,1)
+##D PBmodcomp(fmLarge, L)
+##D 
+##D 
+##D ## Vanilla
+##D PBmodcomp(beet0, beet_no.harv, nsim=200)
+##D 
+##D ## Simulate reference distribution separately:
+##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200)
+##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
+##D 
+##D ## Do computations with multiple processors:
+##D ## Number of cores:
+##D (nc <- detectCores())
+##D ## Create clusters
+##D cl <- makeCluster(rep("localhost", nc))
+##D 
+##D ## Then do:
+##D PBmodcomp(beet0, beet_no.harv, cl=cl)
+##D 
+##D ## Or in two steps:
+##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200, cl=cl)
+##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
+##D 
+##D ## It is recommended to stop the clusters before quitting R:
+##D stopCluster(cl)
+## End(Not run)
+
+
+
+
+cleanEx()
+nameEx("PB-refdist")
+### * PB-refdist
+
+flush(stderr()); flush(stdout())
+
+### Name: PBrefdist
+### Title: Calculate reference distribution using parametric bootstrap
+### Aliases: PBrefdist PBrefdist.mer PBrefdist.lmerMod PBrefdist.lm
+### Keywords: utilities models
+
+### ** Examples
+
+data(beets)
+head(beets)
+beet0<-lmer(sugpct~block+sow+harvest+(1|block:harvest), data=beets, REML=FALSE)
+beet_no.harv <- update(beet0, .~.-harvest)
+rr <- PBrefdist(beet0, beet_no.harv, nsim=20)
+rr
+
+## Note clearly many more than 10 simulations must be made in practice.
+
+## Computations can be made in parallel using several processors:
+## Not run: 
+##D cl <- makeSOCKcluster(rep("localhost", 4))
+##D clusterEvalQ(cl, library(lme4))
+##D clusterSetupSPRNG(cl)
+##D rr <- PBrefdist(beet0, beet_no.harv, nsim=20)
+##D stopCluster(cl)
+## End(Not run)
+## Above, 4 cpu's are used and 5 simulations are made on each cpu.
+
+
+
+cleanEx()
+nameEx("getKR")
+### * getKR
+
+flush(stderr()); flush(stdout())
+
+### Name: getKR
+### Title: Extract (or "get") components from a 'KRmodcomp' object.
+### Aliases: getKR
+### Keywords: models
+
+### ** Examples
+
+data(beets, package='pbkrtest')
+lg <- lmer(sugpct ~ block + sow + harvest + (1|block:harvest), 
+              data=beets, REML=FALSE)
+sm <- update(lg, .~. - harvest)
+xx<-KRmodcomp(lg, sm)
+getKR(xx, "ddf") # get denominator degrees of freedom.
+
+
+
+
+cleanEx()
 nameEx("vcovAdj")
 ### * vcovAdj
 
@@ -193,7 +229,7 @@ flush(stderr()); flush(stdout())
 ### Name: vcovAdj
 ### Title: Ajusted covariance matrix for linear mixed models according to
 ###   Kenward and Roger
-### Aliases: vcovAdj
+### Aliases: vcovAdj LMM_Sigma_G
 ### Keywords: function
 
 ### ** Examples

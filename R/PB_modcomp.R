@@ -8,8 +8,9 @@ PBmodcomp <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, detai
   UseMethod("PBmodcomp")
 }
 
-PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, details=0){
+PBmodcomp.lmerMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, details=0){
 
+  cat("PBmodcomp.lmerMod\n")
   f.large <- formula(largeModel)
   attributes(f.large) <- NULL
 
@@ -23,9 +24,17 @@ PBmodcomp.mer <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, d
   
   if (is.null(ref)){
     ref <- PBrefdist(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
+  }
+  
+  samples <- attr(ref, "samples")
+  if (!is.null(samples)){
+    nsim <- samples['nsim']
+    npos <- samples['npos']
   } else {
     nsim <- length(ref)
+    npos <- sum(ref>0)
   }
+  
   
   LRTstat     <- getLRT(largeModel, smallModel)
   ans         <- .finalizePB(LRTstat, ref)
@@ -43,11 +52,9 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
   attributes(f.large) <- NULL
 
   if (inherits(smallModel, c("Matrix", "matrix"))){
-    #cat(".....smallModel is a matrix\n")
     f.small <- smallModel
     smallModel <- restrictionMatrix2model(largeModel, smallModel)
   } else {
-    #cat(".....smallModel is a model object\n")
     f.small <- formula(smallModel)
     attributes(f.small) <- NULL
   }
@@ -60,12 +67,10 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
   
   if (is.null(ref)){
     ref <- PBrefdist(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
-  } else {
-    nsim <- length(ref)
   }
   
   LRTstat     <- getLRT(largeModel, smallModel)
-  ans         <- .finalizePB(LRTstat,ref)
+  ans         <- .finalizePB(LRTstat, ref)
   ans$LRTstat <- LRTstat
   ans$ref     <- ref
   ans$f.large <- f.large
@@ -73,26 +78,29 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
   ans
 }
 
-
-
 .finalizePB <- function(LRTstat, ref){
 
   tobs <- unname(LRTstat[1])
   ndf  <- unname(LRTstat[2])
-  
-  nsim    <- length(ref)
+
+  refpos <- ref[ref>0]
+  nsim <- length(ref)
+  npos <- length(refpos)
+
   ##cat(sprintf("EE=%f VV=%f\n", EE, VV))
   p.chi <- 1-pchisq(tobs, df=ndf)
   ## Direct computation of tail probability
-  n.extreme <- sum(tobs < ref)
-  p.PB  <- n.extreme / nsim
+
+  n.extreme <- sum(tobs < refpos)
+  p.PB  <- (1+n.extreme) / (1+npos)
   
   test = list(
     LRT      = c(stat=tobs,    df=ndf,    p.value=p.chi),
     PBtest   = c(stat=tobs,    df=NA,     p.value=p.PB))
 
   test  <- as.data.frame(do.call(rbind, test))
-  ans   <- list(test=test, type="X2test", ctime=attr(ref,"ctime"))
+  ans   <- list(test=test, type="X2test", samples=c(nsim=nsim, npos=npos), n.extreme=n.extreme,
+                ctime=attr(ref,"ctime"))
   class(ans) <- c("PBmodcomp")
   ans
 }
@@ -101,24 +109,32 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
 
   tobs <- unname(LRTstat[1])
   ndf  <- unname(LRTstat[2])
-  
-  EE      <- mean(ref)
-  VV      <- var(ref)
-  nsim    <- length(ref)
-  ##cat(sprintf("EE=%f VV=%f\n", EE, VV))
+ 
+  refpos   <- ref[ref>0]
+  nsim <- length(ref)
+  npos <- length(refpos)
 
+    
+  EE      <- mean(refpos)
+  VV      <- var(refpos)
+
+  ##cat(sprintf("EE=%f VV=%f\n", EE, VV))
   p.chi <- 1-pchisq(tobs, df=ndf)
   
   ## Direct computation of tail probability
-  n.extreme <- sum(tobs < ref)
-  p.PB  <- n.extreme / nsim
+  n.extreme <- sum(tobs < refpos)
+  ##p.PB  <- n.extreme / npos
+  p.PB  <- (1+n.extreme) / (1+npos)
 
-  se <- round(sqrt(p.PB*(1-p.PB)/nsim),4)
+  p.PB.all  <- (1+n.extreme) / (1+nsim)
+
+  
+  se <- round(sqrt(p.PB*(1-p.PB)/npos),4)
   ci <- round(c(-1.96, 1.96)*se + p.PB,4)
 
   ## Kernel density estimate
-  dd <- density(ref)
-  p.KD <- sum(dd$y[dd$x>=tobs])/sum(dd$y)
+  ##dd <- density(ref)
+  ##p.KD <- sum(dd$y[dd$x>=tobs])/sum(dd$y)
   
   ## Bartlett correction - X2 distribution
   BCstat  <- ndf * tobs/EE
@@ -139,22 +155,27 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
   test = list(
     LRT      = c(stat=tobs,    df=ndf, ddf=NA,   p.value=p.chi),
     PBtest   = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.PB),
-    PBkd     = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.KD),
+##          PBkd     = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.KD),
     Gamma    = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.Ga),
     F        = c(stat=Fobs,    df=ndf, ddf=ddf,  p.value=p.FF),
     Bartlett = c(stat=BCstat,  df=ndf, ddf=NA,   p.value=p.BC)
+    #,
+    #PBtest.all   = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.PB.all),
+    #Bartlett.all = c(stat=BCstat.all,  df=ndf, ddf=NA,   p.value=p.BC.all)
     ##F2       = c(stat=Fobs2,   df=ndf,  p.value=p.FF2, ddf=ddf2)
     )
 
   test <- as.data.frame(do.call(rbind, test))
-  ans <- list(test=test, type="X2test")
-  
-  attr(ans,"moment") <- c(mean=EE, var=VV, nsim=nsim)
-  attr(ans,"gamma")  <- c(scale=scale, shape=shape)
-  attr(ans,"ref")    <- ref
-  attr(ans,"ci")     <- ci
-  attr(ans,"se")     <- se
-  attr(ans,"ctime")  <- attr(ref,"ctime")
+  ans <- list(test=test, type="X2test",
+              moment = c(mean=EE, var=VV),
+              samples= c(nsim=nsim, npos=npos),
+              gamma  = c(scale=scale, shape=shape),
+              ref    = ref,
+              ci     = ci,
+              se     = se,
+              n.extreme = n.extreme,
+              ctime  = attr(ref, "ctime")
+              )
   class(ans) <- c("PBmodcomp")
   ans
 }
@@ -169,21 +190,20 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=200, ref=NULL, cl=NULL, de
 .PBcommon <- function(x){
 
   cat(sprintf("Parametric bootstrap test; "))
-  
-  if (!is.null((zz<- attr(x,"moment")))){
-    cat(sprintf("bootstrap samples: %i", zz['nsim']))
-  }
-  if (!is.null((zz<- attr(x,"ctime")))){
+  if (!is.null((zz<- x$ctime))){
     cat(sprintf(" computing time: %.2f sec.", round(zz,2)))
   }
   cat("\n")
+
+  
+  if (!is.null((sam <- x$samples)))
+    cat(sprintf("Requested samples: %d Used samples: %d Extremes: %d\n", sam[1], sam[2], x$n.extreme))
   
   if(!is.null(x$f.large)){
     cat("large : "); print(x$f.large)
     cat("small : "); print(x$f.small)
   }
 }
-
 
 print.PBmodcomp <- function(x, ...){
   .PBcommon(x)
@@ -207,28 +227,15 @@ print.summaryPB <- function(x,...){
   printCoefmat(ans, tst.ind=1, na.print='', has.Pvalue=TRUE)
   cat("\n")
 
-  ci <- attr(x, "ci")  
-  #ci <- x$ci
-  cat(sprintf("95 pct CI for PBtest   : [%s]\n", toString(ci)))
-
-  mo <- attr(x, "moment") 
-  #mo <- x$moment
-  cat(sprintf("Reference distribution : mean=%f var=%f nsim=%d\n", mo[1], mo[2], mo[3]))
-
-  ga <- attr(x, "gamma")
-  #ga <- x$gamma
-  cat(sprintf("Gamma approximation    : scale=%f shape=%f\n", ga[1], ga[2]))
+##   ci <- x$ci
+##   cat(sprintf("95 pct CI for PBtest   : [%s]\n", toString(ci)))
+##   mo <- x$moment
+##   cat(sprintf("Reference distribution : mean=%f var=%f\n", mo[1], mo[2]))
+##   ga <- x$gamma
+##   cat(sprintf("Gamma approximation    : scale=%f shape=%f\n", ga[1], ga[2]))
 
   return(invisible(x))
 }
-
-
-
-
-
-
-
-
 
 
 

@@ -1,0 +1,226 @@
+%\VignetteIndexEntry{pbkrtest-introduction: Introduction to pbkrtest}
+%\VignettePackage{pbkrtest}
+
+\documentclass[a4paper]{article}
+\usepackage{a4wide}
+%\usepackage[T1]{fontenc}
+\usepackage{inputenx}
+\usepackage{boxedminipage,color}
+
+
+
+\parindent0pt\parskip5pt
+\def\code#1{{\texttt{#1}}}
+\def\pkg#1{{\texttt{#1}}}
+\def\R{\texttt{R}}
+
+\title{On the usage of the  \pkg{pbkrtest} package\\ ** WORKING DOCUMENT **}
+
+\author{S{\o}ren H{\o}jsgaard and Ulrich Halekoh}
+\SweaveOpts{prefix.string=figure/pbkr, keep.source=T, height=4}
+
+\begin{document}
+
+\definecolor{myGray}{rgb}{0.95,0.95,0.95}
+
+\makeatletter
+\renewenvironment{Schunk}{
+  \begin{lrbox}{\@tempboxa}
+    \begin{boxedminipage}
+      {\columnwidth}\small}
+    {\end{boxedminipage}
+  \end{lrbox}%
+  \colorbox{myGray}{\usebox{\@tempboxa}}
+}
+\makeatother
+
+%\renewenvironment{Schunk}{\linespread{.85}\small}{}
+
+\maketitle
+\tableofcontents
+
+@
+<<echo=F,results=hide>>=
+options(prompt = "R> ", continue = "+  ", width = 80, useFancyQuotes = FALSE)
+@ %def
+
+
+@
+<<echo=FALSE>>=
+library(pbkrtest)
+@ %def
+
+\section{Introduction}
+
+The \code{shoes} data is a list of two vectors, giving the wear of
+shoes of materials A and B for one foot each of ten boys.
+
+@
+<<>>=
+data(shoes, package="MASS")
+shoes
+@ %def
+
+A plot clearly reveals that boys wear their shoes differently.
+
+@ 
+<<fig=T>>=
+plot(A~1, data=shoes, col='red',lwd=2, pch=1, ylab="wear", xlab="boy")
+points(B~1, data=shoes, col='blue',lwd=2,pch=2)
+points(I((A+B)/2)~1, data=shoes, pch='-', lwd=2)
+@ %def 
+
+
+One option for testing the effect of materials is to make a paired
+$t$--test. The following forms are equivalent:
+
+@ 
+<<>>=
+r1<-t.test(shoes$A, shoes$B, paired=T)
+r2<-t.test(shoes$A-shoes$B)
+r1
+@ %def 
+
+
+To work with data in a mixed model setting we create a dataframe:
+
+@ 
+<<>>=
+boy <- rep(1:10,2)
+boyf<- factor(letters[boy])
+mat <- factor(c(rep("A", 10), rep("B",10)))
+shoedf <- data.frame(wear=unlist(shoes), boy=boy, boyf=boyf, mat=mat)
+head(shoedf)
+@ %def 
+
+For later use we create an imbalanced version of data:
+
+@ 
+<<>>=
+shoedf2 <-  shoedf[-c(9,12),]
+@ %def 
+
+
+@ 
+<<>>=
+lmm1 <- lmer(wear~mat+(1|boyf), data=shoedf)
+lmm0 <- update(lmm1, .~.-mat)
+lmm1i <- lmer(wear~mat+(1|boyf), data=shoedf2)
+lmm0i <- update(lmm1i, .~.-mat)
+@ %def 
+
+The asymptotic likelihood ratio test shows stronger significance than
+the $t$--test:
+
+@ 
+<<>>=
+anova(lmm1, lmm0, test="Chisq")
+anova(lmm1i, lmm0i, test="Chisq")
+@ %def 
+
+\section{Kenward--Roger approach}
+\label{sec:kenw-roger-appr}
+
+
+The Kenward--Roger approximation is exact in this case
+
+@ 
+<<>>=
+(kr<-KRmodcomp(lmm1, lmm0))
+@ %def 
+
+@ 
+<<>>=
+summary(kr)
+@ %def 
+
+Relevant information can be retrieved with
+
+@ 
+<<>>=
+getKR(kr, "ddf")
+@ %def 
+
+@ 
+<<>>=
+(kri<-KRmodcomp(lmm1i, lmm0i))
+@ %def 
+
+
+
+\section{Parametric bootstrap}
+\label{sec:parametric-bootstrap}
+
+Parametric bootstrap provides an alternative but many simulations are
+often needed to provide credible results:
+
+@ 
+<<>>=
+(pb<-PBmodcomp(lmm1, lmm0, nsim=99))
+@ %def 
+
+@ 
+<<>>=
+summary(pb)
+@ %def 
+
+
+
+@ 
+<<>>=
+(pbi<-PBmodcomp(lmm1i, lmm0i, nsim=99))
+@ %def 
+
+
+\section{With linear models}
+\label{sec:with-linear-models}
+
+
+@ 
+<<>>=
+lm1<-lm(wear~mat+boyf, data=shoedf)
+lm0<-update(lm1, .~.-mat)
+anova(lm1, lm0)
+@ %def 
+
+
+@ 
+<<>>=
+lm1i<-lm(wear~mat+boyf, data=shoedf2)
+lm0i<-update(lm1i, .~.-mat)
+anova(lm1i, lm0i)
+@ %def 
+
+
+\appendix
+
+\section{Matrices for random effects}
+\label{sec:matr-rand-effects}
+
+
+The matrices involved in the random effects can be obtained with
+
+@ 
+<<>>=
+shoedf3 <- subset(shoedf, boy<=5)
+lmm1 <- lmer(wear~mat+(1|boyf), data=shoedf3)
+SG <- LMM_Sigma_G(lmm1)
+@ %def 
+
+@ 
+<<>>=
+round(SG$Sigma*10)
+@ %def 
+
+@ 
+<<>>=
+SG$G
+@ %def 
+
+
+
+
+
+\end{document}
+
+

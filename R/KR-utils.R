@@ -23,8 +23,6 @@
     (j-1)*(N-j/2)+i
   }
 }
-
-
 .indexVec2Symmat<-function(k,N) {
   ## inverse of indexSymmat2vec
   ##result: index pair (i,j) with i>=j
@@ -37,25 +35,32 @@
   return(c(i,j))
 }
 
-
-
 .divZero<-function(x,y,tol=1e-14){
   ## ratio x/y is set to 1 if both |x| and |y| are below tol
   x.y <- if( abs(x)<tol & abs(y)<tol) {1} else x/y
   x.y
 }
 
-
 .is.lmm <- function(object) {
-  ##checks whether  object is
-  ## - mer object  AND
-  ## - linear mixed model
-  if (class(object) %in% "mer") {
-    if (length(object@muEta)==0 )
-      TRUE
-    else
-      FALSE
-  } else {
+  if (class(object) %in% c("matrix","Matrix")){
     FALSE
+  } else {
+    isLMM(object)
   }
 }
+
+
+
+## .is.lmm <- function(object) {
+##   ##checks whether  object is
+##   ## - mer object  AND
+##   ## - linear mixed model
+##   if (class(object) %in% "mer") {
+##     if (length(object@muEta)==0 )
+##       TRUE
+##     else
+## ##       FALSE
+## ##   } else {
+## ##     FALSE
+## ##   }
+## ## }

@@ -1,4 +1,15 @@
-2011-08-25 Søren Højsgaard <sorenh@mail.dk>
+2012-11-20 Ulrich Halekoh <ulrich.halekoh@agrsci.dk>
+
+	* LMM_Sigma_G() added. Computes Sigma and the components of G 
+
+	* vcovAdj() rewritten  for correct extraction of the 
+	submatrices of Zt for random effects for different grouping factors.
+
+	* getKR function for extracting slots from KRmodcomp object
+	
+	* compiled to Version 0.3-3
+	   
+2012-08-25 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* Now uses the parallel package instead of snow
 
@@ -7,7 +18,7 @@
 	* Version 0.3-2 uploaded.
 
 
-2011-04-24 Søren Højsgaard <sorenh@mail.dk>
+2012-04-24 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* Version 0.3-1 uploaded.
 

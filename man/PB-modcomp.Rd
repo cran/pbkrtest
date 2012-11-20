@@ -2,11 +2,12 @@
 \alias{PBmodcomp}
 \alias{PBmodcomp.lm}
 \alias{PBmodcomp.mer}
+\alias{PBmodcomp.lmerMod}
 \alias{getLRT}
 \alias{getLRT.lm}
 \alias{getLRT.mer}
-% \alias{makePBcluster}
-% \alias{stopPBcluster}
+\alias{getLRT.lmerMod}
+
 \alias{plot.XXmodcomp}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
@@ -17,13 +18,10 @@
   Model comparison of mixed models using parametric bootstrap methods.
 }
 \usage{
-%BCmodcomp(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
-%\method{BCmodcomp}{mer}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
 PBmodcomp(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
 \method{PBmodcomp}{lm}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
 \method{PBmodcomp}{mer}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
-%makePBcluster(n=2)
-%stopPBcluster()
+\method{PBmodcomp}{lmerMod}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -105,6 +103,17 @@ beet_no.harv <- update(beet0, .~.-harvest)
 PBmodcomp(beet0, beet_no.harv, nsim=20)
 
 \dontrun{
+(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+## removing Days
+(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+anova(fmLarge, fmSmall)
+PBmodcomp(fmLarge, fmSmall)
+
+## The same test using a restriction matrix
+L<-cbind(0,1)
+PBmodcomp(fmLarge, L)
+
+
 ## Vanilla
 PBmodcomp(beet0, beet_no.harv, nsim=200)
 

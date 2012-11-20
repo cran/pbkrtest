@@ -1,21 +1,23 @@
 \name{KenwardRoger}
 \alias{KRmodcomp}
 \alias{KRmodcomp.mer}
+\alias{KRmodcomp.lmerMod}
 \title{Ftest and degrees of freedom based on Kenward-Roger approximation}
 \description{
   An approximate F-test based on the Kenward-Roger 
   approach.
 }
 \usage{
-KRmodcomp(largeModel, smallModel, beta0=0, details=0)
-\method{KRmodcomp}{mer}(largeModel, smallModel, beta0=0, details=0)
+KRmodcomp(largeModel, smallModel, betaH=0, details=0)
+\method{KRmodcomp}{mer}(largeModel, smallModel, betaH=0, details=0)
+\method{KRmodcomp}{lmerMod}(largeModel, smallModel, betaH=0, details=0)
 }
 	
 \arguments{
   \item{largeModel}{An \code{lmer} model}
   \item{smallModel}{An \code{lmer} model or a restriction matrix}
-  \item{beta0}{A number or a vector of the beta of the hypothesis, 
-    e.g. L beta=beta0. beta0=0 if modelSmall is a model not a
+  \item{betaH}{A number or a vector of the beta of the hypothesis, 
+    e.g. L beta=L betaH. betaH=0 if modelSmall is a model not a
     restriction matrix.}
   \item{details}{If larger than 0 some timing details are printed.}
   \item{\dots}{Additonal arguments to print function}	
@@ -34,12 +36,19 @@ KRmodcomp(largeModel, smallModel, beta0=0, details=0)
   the same coavarianc structure as \code{largeModel}. Furthermore, its
   linear space of expectation must be a subspace of the space for
   \code{largeModel}.  The model \code{smallModel} can also be a
-  restriction matrix \code{L} specifying the hypothesis \code{L beta
-    =beta0}, where \code{L} is a \eqn{k \times p}{k X p} matrix and
+  restriction matrix \code{L} specifying the hypothesis \eqn{L \beta
+    = L \beta_H}, where \eqn{L} is a \eqn{k \times p}{k X p} matrix and
   \eqn{\beta} is a \eqn{p} column vector the same length as
   \code{fixef(largeModel)}.
-  
-  \eqn{\beta0} is a \eqn{k} column vector.
+
+The \eqn{\beta_H} is a \eqn{p} column vector.
+
+Notice: if you want to test a hypothesis \eqn{L \beta = c} 
+with a \eqn{k}
+vector \eqn{c},
+a suitable \eqn{\beta_H}
+is obtained via  \eqn{\beta_H=L c} where \eqn{L_n} is a g-inverse of \eqn{L}.
+
 
   Notice: It cannot be guaranteed that the results agree with other
   implementations of the Kenward-Roger approach!
@@ -62,16 +71,20 @@ KRmodcomp(largeModel, smallModel, beta0=0, details=0)
 
 
 \seealso{
-  \code{\link{lmer}}.
+  \code{\link{getKR}}
+  \code{\link{lmer}}
+  \code{\link{vcovAdj}}
+  \code{\link{PBmodcomp}}
 }
 \examples{
-(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
-## removing Day
-(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
-(KRmodcomp(fmLarge,fmSmall))
+	(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+	## removing Days
+	(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+	anova(fmLarge,fmSmall)
+	KRmodcomp(fmLarge,fmSmall)
 
 ## The same test using a restriction matrix
 L<-cbind(0,1)
-(KRmodcomp(fmLarge,L))
+KRmodcomp(fmLarge, L)
 }
 \keyword{function}

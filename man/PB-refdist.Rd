@@ -1,6 +1,7 @@
 \name{PBrefdist}
 \alias{PBrefdist}
 \alias{PBrefdist.mer}
+\alias{PBrefdist.lmerMod}
 \alias{PBrefdist.lm}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
@@ -15,6 +16,7 @@
 PBrefdist(largeModel, smallModel, nsim = 200, seed=NULL, cl = NULL, details = 0)
 \method{PBrefdist}{lm}(largeModel, smallModel, nsim = 200, seed=NULL, cl = NULL, details = 0)
 \method{PBrefdist}{mer}(largeModel, smallModel, nsim = 200, seed=NULL, cl = NULL, details = 0)
+\method{PBrefdist}{lmerMod}(largeModel, smallModel, nsim = 200, seed=NULL, cl = NULL, details = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
