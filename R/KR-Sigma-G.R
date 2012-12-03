@@ -83,7 +83,9 @@ LMM_Sigma_G  <- function(object, details=0) {
 ##### calculation ov adjustes covariance matrix
 .get_Nrandomeffects_group <- function(object) {
   ##  \item{object}{A mer or lmerMod  model}
-  ## output: number of random effects for each grouping factor
+  ##  \item{object}{A mer or lmerMod  model}
+  ## output:  dimesnion of covariance matrix for random term ii
+  ## == #random effects for  each level of random term ii
   .cc <- class(object)
   qq<- if (.cc %in% "mer") {
     sapply(object@ST,function(X) nrow(X)) 
@@ -100,8 +102,14 @@ LMM_Sigma_G  <- function(object, details=0) {
   ## without the residual variance
   ##output: list of several inidces
 
-  ff<- getME(object,"n_rtrms")
-  
+ # the folloing gives in CRAN the number of randm-term-factors
+# and in Forge the number of grouping fasctor 
+# ff<- getME(object,"n_rtrms")
+ 
+# we need  the number of random-term factors 
+  group.index<-getME(object,"Gp")
+
+  ff <-length(group.index)-1 
   gg <- sapply(getME(object,"flist"),
              function(x)length(levels(x)))
   
@@ -109,17 +117,22 @@ LMM_Sigma_G  <- function(object, details=0) {
   
   ## number of variance parameters of each GGamma_i
   ss <- qq * (qq+1)/2
+  # numb. random effects per level of random-term-factor
+  nn.groupFac<-diff(group.index)  
+    ## number  of levels for each  random-term-factor
+    ## residual error here excluded!
+    nn.groupFacLevels<-nn.groupFac/qq
 
-  group.index<-getME(object,"Gp")
 			
-  list(n.groupFac=ff,
-       nn.groupFacLevels=gg,
+  list(n.groupFac=ff, # this is actualle the number of rando.term factors, should possible get a more approriate name
+       nn.groupFacLevelsNew=gg,  #length of different grouping factors
+	   nn.groupFacLevels= nn.groupFacLevels, #vector of the numb. levels for each random-term-factor
        nn.GGamma=qq,
        mm.GGamma=ss,
        group.index=group.index)
 }
 
-.get_Ztgroup <- function(ii.group,Zt,object) {
+.get_Ztgroup <- function(ii.group, Zt, object) {
   ##arguiments
   ## \item{ii.group}{the index number of a grouping factor}
   ##  \item{Zt}{the transpose of the random factors design matrix Z}

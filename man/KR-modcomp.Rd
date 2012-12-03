@@ -20,7 +20,7 @@ KRmodcomp(largeModel, smallModel, betaH=0, details=0)
     e.g. L beta=L betaH. betaH=0 if modelSmall is a model not a
     restriction matrix.}
   \item{details}{If larger than 0 some timing details are printed.}
-  \item{\dots}{Additonal arguments to print function}	
+  \item{\dots}{Additional arguments to print function}	
 }
 
 \details{
@@ -33,7 +33,7 @@ KRmodcomp(largeModel, smallModel, betaH=0, details=0)
   The \code{largeModel} may be a model fitted with \code{lmer}
   either using \code{REML=TRUE} or \code{REML=FALSE}.  The
   \code{smallModel} can be a model fitted with \code{lmer}. It must have
-  the same coavarianc structure as \code{largeModel}. Furthermore, its
+  the same covariance structure as \code{largeModel}. Furthermore, its
   linear space of expectation must be a subspace of the space for
   \code{largeModel}.  The model \code{smallModel} can also be a
   restriction matrix \code{L} specifying the hypothesis \eqn{L \beta
@@ -43,12 +43,9 @@ KRmodcomp(largeModel, smallModel, betaH=0, details=0)
 
 The \eqn{\beta_H} is a \eqn{p} column vector.
 
-Notice: if you want to test a hypothesis \eqn{L \beta = c} 
-with a \eqn{k}
-vector \eqn{c},
-a suitable \eqn{\beta_H}
-is obtained via  \eqn{\beta_H=L c} where \eqn{L_n} is a g-inverse of \eqn{L}.
-
+Notice: if you want to test a hypothesis \eqn{L \beta = c} with a
+\eqn{k} vector \eqn{c}, a suitable \eqn{\beta_H} is obtained via
+\eqn{\beta_H=L c} where \eqn{L_n} is a g-inverse of \eqn{L}.
 
   Notice: It cannot be guaranteed that the results agree with other
   implementations of the Kenward-Roger approach!
@@ -66,7 +63,8 @@ is obtained via  \eqn{\beta_H=L c} where \eqn{L_n} is a g-inverse of \eqn{L}.
 
 
 \author{
-  Ulrich Halekoh \email{ulrich.halekoh@agrsci.dk}, Søren Højsgaard \email{sorenh@math.aau.dk}
+  Ulrich Halekoh \email{ulrich.halekoh@agrsci.dk}, Søren Højsgaard
+  \email{sorenh@math.aau.dk} 
 }
 
 
@@ -77,14 +75,21 @@ is obtained via  \eqn{\beta_H=L c} where \eqn{L_n} is a g-inverse of \eqn{L}.
   \code{\link{PBmodcomp}}
 }
 \examples{
-	(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
-	## removing Days
-	(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
-	anova(fmLarge,fmSmall)
-	KRmodcomp(fmLarge,fmSmall)
+(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+## removing Days
+(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+anova(fmLarge,fmSmall)
+KRmodcomp(fmLarge,fmSmall)
 
 ## The same test using a restriction matrix
 L<-cbind(0,1)
 KRmodcomp(fmLarge, L)
+
+## Same example, but with independent intercept and slope effects:
+m.large  <- lmer(Reaction ~ Days + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+m.small  <- lmer(Reaction ~ 1 + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+anova(m.large, m.small)
+KRmodcomp(m.large, m.small)
+
 }
 \keyword{function}

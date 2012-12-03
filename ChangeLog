@@ -1,3 +1,18 @@
+2012-12-03 Ulrich Halekoh <ulrich.halekoh@agrsci.dk>
+	* .get_indices() corrected nn.groupFaclevels the number of the
+		levels for each random-term-factor 
+		was erroneoulsy only returned once if a grouping factor
+		occurred several times as in
+		(1|Subject) + (0+Days|Subject)
+	
+     	* furthermore, the calculation of the number of random-term-factors
+    		n.groupFac was rolled back, due to an inconsistency in its definition 
+		via (getME(model,'n_rtrms') which yieled for the above
+		random term 2 (CRAN) and 1 (FORGE) 
+	
+	* compiled to Version 0.3-4
+		
+
 2012-11-20 Ulrich Halekoh <ulrich.halekoh@agrsci.dk>
 
 	* LMM_Sigma_G() added. Computes Sigma and the components of G 

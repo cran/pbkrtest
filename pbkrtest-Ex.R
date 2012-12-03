@@ -91,15 +91,21 @@ flush(stderr()); flush(stdout())
 
 ### ** Examples
 
-	(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
-	## removing Days
-	(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
-	anova(fmLarge,fmSmall)
-	KRmodcomp(fmLarge,fmSmall)
+(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+## removing Days
+(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+anova(fmLarge,fmSmall)
+KRmodcomp(fmLarge,fmSmall)
 
 ## The same test using a restriction matrix
 L<-cbind(0,1)
 KRmodcomp(fmLarge, L)
+
+m  <- lmer(Reaction ~ Days + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+m2 <- lmer(Reaction ~ 1 + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+anova(m, m2)
+KRmodcomp(m, m2)
+
 
 
 
