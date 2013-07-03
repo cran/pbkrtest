@@ -114,12 +114,13 @@ KRmodcomp.lmerMod<-KRmodcomp.mer<-function(largeModel, smallModel, betaH=0, deta
   
   rho <- 1/q * (.divZero(1-A2/q,V1))^2 * V0/V2
   df2 <- 4 + (q+2)/ (q*rho-1)
-                                        #  cat(sprintf("rho=%f, df2=%f\n", rho, df2))
   
 ###orgDef: F.scaling <-  df2 /(E*(df2-2))
 ###altCalc F.scaling<- df2 * .divZero(1-A2/q,df2-2,tol=1e-12)
   ## this does not work because df2-2 can be about 0.1
   F.scaling<-ifelse( abs(df2-2)<1e-2, 1 , df2*(1-A2/q)/(df2-2))
+
+  ##cat(sprintf("KR: rho=%f, df2=%f F.scaling=%f\n", rho, df2, F.scaling))
 
   
 ### The F-statistic; scaled and unscaled
@@ -156,7 +157,7 @@ KRmodcomp.lmerMod<-KRmodcomp.mer<-function(largeModel, smallModel, betaH=0, deta
     print(x$f.small)
   } else {
     formSmall <- x$f.small
-    cat("small : L beta = betaH \n")
+    cat("small : L beta = L betaH \n")
     cat('L=')
     print(formSmall$L)
     cat('betaH=')

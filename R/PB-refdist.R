@@ -5,11 +5,11 @@
 ###
 ### ###########################################################
 
-PBrefdist <- function(largeModel, smallModel, nsim=200, seed=NULL, cl=NULL, details=0){
+PBrefdist <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
     UseMethod("PBrefdist")
 }
 
-PBrefdist.lm <- function(largeModel, smallModel, nsim=200, seed=NULL, cl=NULL, details=0){
+PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
 
   ##cat(".....PBrefdist.lm\n")
   t0 <- proc.time()
@@ -73,7 +73,7 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=200, seed=NULL, cl=NULL, d
   as.numeric(ref)
 }
 
-PBrefdist.lmerMod <- PBrefdist.mer <- function(largeModel, smallModel, nsim=200, seed=NULL, cl=NULL,details=0){
+PBrefdist.lmerMod <- PBrefdist.mer <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL,details=0){
 
   t0 <- proc.time()
 

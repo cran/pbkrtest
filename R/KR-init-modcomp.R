@@ -12,8 +12,8 @@ KRmodcomp_init.lmerMod <- KRmodcomp_init.mer <-
     if (!mers) {
       cat("Error in modcomp_init\n")
       cat(paste("either model ",substitute(m1), 
-                "\n is not a linear mixed of class mer \n \n",sep=' '))
-      cat(paste("or model ", substitute(m2),"\n is neither of class mer nor a matrix",sep=''))
+                "\n is not a linear mixed of class mer(CRAN) or lmerMod (GitHub)\n \n",sep=' '))
+      cat(paste("or model ", substitute(m2),"\n is neither of that class nor a matrix",sep=''))
       stop()
     }
     

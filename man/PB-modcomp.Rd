@@ -18,10 +18,10 @@
   Model comparison of mixed models using parametric bootstrap methods.
 }
 \usage{
-PBmodcomp(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
-\method{PBmodcomp}{lm}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
-\method{PBmodcomp}{mer}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
-\method{PBmodcomp}{lmerMod}(largeModel, smallModel, nsim = 200, ref = NULL, cl = NULL, details = 0)
+PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
+\method{PBmodcomp}{lm}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
+\method{PBmodcomp}{mer}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
+\method{PBmodcomp}{lmerMod}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -115,10 +115,10 @@ PBmodcomp(fmLarge, L)
 
 
 ## Vanilla
-PBmodcomp(beet0, beet_no.harv, nsim=200)
+PBmodcomp(beet0, beet_no.harv, nsim=1000)
 
 ## Simulate reference distribution separately:
-refdist <- PBrefdist(beet0, beet_no.harv, nsim=200)
+refdist <- PBrefdist(beet0, beet_no.harv, nsim=1000)
 PBmodcomp(beet0, beet_no.harv, ref=refdist)
 
 ## Do computations with multiple processors:
@@ -131,7 +131,7 @@ cl <- makeCluster(rep("localhost", nc))
 PBmodcomp(beet0, beet_no.harv, cl=cl)
 
 ## Or in two steps:
-refdist <- PBrefdist(beet0, beet_no.harv, nsim=200, cl=cl)
+refdist <- PBrefdist(beet0, beet_no.harv, nsim=1000, cl=cl)
 PBmodcomp(beet0, beet_no.harv, ref=refdist)
 
 ## It is recommended to stop the clusters before quitting R:

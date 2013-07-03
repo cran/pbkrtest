@@ -4,7 +4,7 @@ options(warn = 1)
 options(pager = "console")
 library('pbkrtest')
 
-assign(".oldSearch", search(), pos = 'CheckExEnv')
+base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
 cleanEx()
 nameEx("DATA-beets")
 ### * DATA-beets
@@ -101,10 +101,11 @@ KRmodcomp(fmLarge,fmSmall)
 L<-cbind(0,1)
 KRmodcomp(fmLarge, L)
 
-m  <- lmer(Reaction ~ Days + (1|Subject) + (0+Days|Subject), data = sleepstudy)
-m2 <- lmer(Reaction ~ 1 + (1|Subject) + (0+Days|Subject), data = sleepstudy)
-anova(m, m2)
-KRmodcomp(m, m2)
+## Same example, but with independent intercept and slope effects:
+m.large  <- lmer(Reaction ~ Days + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+m.small  <- lmer(Reaction ~ 1 + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+anova(m.large, m.small)
+KRmodcomp(m.large, m.small)
 
 
 
@@ -143,10 +144,10 @@ PBmodcomp(beet0, beet_no.harv, nsim=20)
 ##D 
 ##D 
 ##D ## Vanilla
-##D PBmodcomp(beet0, beet_no.harv, nsim=200)
+##D PBmodcomp(beet0, beet_no.harv, nsim=1000)
 ##D 
 ##D ## Simulate reference distribution separately:
-##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200)
+##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=1000)
 ##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
 ##D 
 ##D ## Do computations with multiple processors:
@@ -159,7 +160,7 @@ PBmodcomp(beet0, beet_no.harv, nsim=20)
 ##D PBmodcomp(beet0, beet_no.harv, cl=cl)
 ##D 
 ##D ## Or in two steps:
-##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=200, cl=cl)
+##D refdist <- PBrefdist(beet0, beet_no.harv, nsim=1000, cl=cl)
 ##D PBmodcomp(beet0, beet_no.harv, ref=refdist)
 ##D 
 ##D ## It is recommended to stop the clusters before quitting R:
@@ -248,7 +249,8 @@ flush(stderr()); flush(stdout())
 
 ### * <FOOTER>
 ###
-cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
+options(digits = 7L)
+base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
 grDevices::dev.off()
 ###
 ### Local variables: ***

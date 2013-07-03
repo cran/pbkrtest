@@ -10,7 +10,8 @@
   %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-getKR(object, name = c("ndf", "ddf", "Fstat", "p.value", "F.scaling", "FstatU", "p.valueU", "aux"))
+getKR(object, name = c("ndf", "ddf", "Fstat", "p.value",
+     "F.scaling", "FstatU", "p.valueU", "aux"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
