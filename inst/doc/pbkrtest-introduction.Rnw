@@ -131,7 +131,7 @@ mat <- factor(c(rep("A", 10), rep("B",10)))
 ## Balanced data:
 shoe.b <- data.frame(wear=unlist(shoes), boy=boy, boyf=boyf, mat=mat)
 head(shoe.b)
-## Imbalanced data; delete boy=1, mat=1 and boy=2, mat=b
+## Imbalanced data; delete (boy=1, mat=1) and (boy=2, mat=b)
 shoe.i <-  shoe.b[-c(1,12),]
 @ %def 
 
@@ -198,7 +198,9 @@ t.test(shoes2$A, shoes2$B, paired=T)
 \label{sec:parametric-bootstrap}
 
 Parametric bootstrap provides an alternative but many simulations are
-often needed to provide credible results:
+often needed to provide credible results (also many more than shown
+here; in this connection it can be useful to exploit that computings
+can be made en parallel, see the documentation):
 
 @ 
 <<>>=
@@ -255,8 +257,9 @@ The matrices involved in the random effects can be obtained with
 @ 
 <<>>=
 shoe3 <- subset(shoe.b, boy<=5)
+shoe3 <- shoe3[order(shoe3$boy), ]
 lmm1  <- lmer( wear ~ mat + (1|boyf), data=shoe3 )
-SG    <- LMM_Sigma_G( lmm1 )
+str( SG <- get_SigmaG( lmm1 ), max=2)
 @ %def 
 
 @ 
@@ -270,6 +273,23 @@ SG$G
 @ %def 
 
 
+% Could be relevant to show for random regression model, but right now
+% lme4 warns when there are few levels of a factor as the case is here -
+% and I don't really want to get the package back with a not from the
+% CRAN maintainers.
+
+
+% subj <- rep(1:2, each=4)
+% tvar <- rep(1:4, 2)
+% yy <- rnorm(length(tvar))
+% dd <- data.frame(yy=yy, tvar=tvar, subj=subj)
+% mm1 <- lmer(yy~(1|subj), data=dd)
+% LMM_Sigma_G(mm1)
+% mm2 <- lmer(yy~(1+tvar|subj), data=dd)
+% LMM_Sigma_G(mm2)
+% mm3 <- lmer(yy~(1+tvar+I(tvar^2)|subj), data=dd)
+% LMM_Sigma_G(mm3)
+% object <- mm3
 
 
 

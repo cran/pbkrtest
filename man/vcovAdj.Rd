@@ -1,6 +1,15 @@
 \name{vcovAdj}
 \alias{vcovAdj}
+\alias{vcovAdj.lmerMod}
+\alias{vcovAdj.mer}
+\alias{vcovAdj_internal}
+\alias{vcovAdj0}
 \alias{LMM_Sigma_G}
+
+\alias{get_SigmaG}
+\alias{get_SigmaG.lmerMod}
+\alias{get_SigmaG.mer}
+
 
 \title{Ajusted covariance matrix for linear mixed models according to Kenward and Roger}
 \description{

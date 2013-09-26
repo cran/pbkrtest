@@ -1,4 +1,13 @@
-2012-07-03 Søren Højsgaard <sorenh@math.aau.dk>
+2013-09-26 Søren Højsgaard <sorenh@math.aau.dk>
+ 
+	* Major reorganizing of KR-related code; preparing for the new
+	version of lme4 getting on CRAN
+
+	* Package no longer Depends on Matrix, but Imports instead
+	
+	* Version 0.3-6 uploaded
+
+2013-07-03 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* Plot method for parametric bootstrap tests improved
 

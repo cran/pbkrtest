@@ -8,7 +8,7 @@ PBmodcomp <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, deta
   UseMethod("PBmodcomp")
 }
 
-PBmodcomp.lmerMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0){
+PBmodcomp.merMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0){
 
   ##cat("PBmodcomp.lmerMod\n")
   f.large <- formula(largeModel)
@@ -21,11 +21,11 @@ PBmodcomp.lmerMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000
     f.small <- formula(smallModel)
     attributes(f.small) <- NULL
   }
-  
+
   if (is.null(ref)){
     ref <- PBrefdist(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
   }
-  
+
   samples <- attr(ref, "samples")
   if (!is.null(samples)){
     nsim <- samples['nsim']
@@ -34,7 +34,7 @@ PBmodcomp.lmerMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000
     nsim <- length(ref)
     npos <- sum(ref>0)
   }
-  
+
   LRTstat     <- getLRT(largeModel, smallModel)
   ans         <- .finalizePB(LRTstat, ref)
   ans$LRTstat <- LRTstat
@@ -63,11 +63,11 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
   if (!(fam.l$family %in% ok.fam)){
     stop(sprintf("family must be of type %s", toString(ok.fam)))
   }
-  
+
   if (is.null(ref)){
     ref <- PBrefdist(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
   }
-  
+
   LRTstat     <- getLRT(largeModel, smallModel)
   ans         <- .finalizePB(LRTstat, ref)
   ans$LRTstat <- LRTstat
@@ -92,7 +92,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
 
   n.extreme <- sum(tobs < refpos)
   p.PB  <- (1+n.extreme) / (1+npos)
-  
+
   test = list(
     LRT      = c(stat=tobs,    df=ndf,    p.value=p.chi),
     PBtest   = c(stat=tobs,    df=NA,     p.value=p.PB))
@@ -108,18 +108,18 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
 
   tobs <- unname(LRTstat[1])
   ndf  <- unname(LRTstat[2])
- 
+
   refpos   <- ref[ref>0]
   nsim <- length(ref)
   npos <- length(refpos)
 
-    
+
   EE      <- mean(refpos)
   VV      <- var(refpos)
 
   ##cat(sprintf("EE=%f VV=%f\n", EE, VV))
   p.chi <- 1-pchisq(tobs, df=ndf)
-  
+
   ## Direct computation of tail probability
   n.extreme <- sum(tobs < refpos)
   ##p.PB  <- n.extreme / npos
@@ -127,33 +127,33 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
 
   p.PB.all  <- (1+n.extreme) / (1+nsim)
 
-  
+
   se <- round(sqrt(p.PB*(1-p.PB)/npos),4)
   ci <- round(c(-1.96, 1.96)*se + p.PB,4)
 
   ## Kernel density estimate
   ##dd <- density(ref)
   ##p.KD <- sum(dd$y[dd$x>=tobs])/sum(dd$y)
-  
+
   ## Bartlett correction - X2 distribution
   BCstat  <- ndf * tobs/EE
   ##cat(sprintf("BCval=%f\n", ndf/EE))
   p.BC    <- 1-pchisq(BCstat,df=ndf)
-  
+
   ## Fit to gamma distribution
   scale   <- VV/EE
   shape   <- EE^2/VV
   p.Ga    <- 1-pgamma(tobs, shape=shape, scale=scale)
 
   ## Fit T/d to F-distribution (1. moment)
-  ddf  <- 2*EE/(EE-ndf)     
+  ddf  <- 2*EE/(EE-ndf)
   Fobs <- tobs/ndf
   p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
 
   ## Fit T/d to F-distribution (1. AND 2. moment)
 ##   EE2   <- EE/ndf
 ##   VV2   <- VV/ndf^2
-  
+
 ##   rho   <- VV2/(2*EE2^2)
 ##   ddf2  <- 4 + (ndf+2)/(rho*ndf-1)
 ##   lam2  <- (ddf/EE2*(ddf-2))
@@ -168,13 +168,13 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
 
 
 
-  
+
   test = list(
     PBtest   = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.PB),
     Gamma    = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.Ga),
     Bartlett = c(stat=BCstat,  df=ndf, ddf=NA,   p.value=p.BC),
     F        = c(stat=Fobs,    df=ndf, ddf=ddf,  p.value=p.FF),
-    LRT      = c(stat=tobs,    df=ndf, ddf=NA,   p.value=p.chi)    
+    LRT      = c(stat=tobs,    df=ndf, ddf=NA,   p.value=p.chi)
     )
     ##          PBkd     = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.KD),
 
@@ -209,7 +209,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
 ##               EE, VV, rho, lam2))
 
 ##   ddf2 <- 4 + (ndf+2)/(rho*ndf-1)
-  
+
 ##   Fobs2 <- lam2 * tobs/ndf
 ##   if (ddf2>0)
 ##     p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)
@@ -230,11 +230,11 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
     cat(sprintf("time: %.2f sec; ", round(zz,2)))
   }
   if (!is.null((sam <- x$samples))){
-    cat(sprintf("samples: %d extremes: %d;", sam[1], x$n.extreme)) 
+    cat(sprintf("samples: %d extremes: %d;", sam[1], x$n.extreme))
   }
   cat("\n")
 
-  
+
   if (!is.null((sam <- x$samples))){
     if (sam[2]<sam[1]){
       cat(sprintf("Requested samples: %d Used samples: %d Extremes: %d\n",
@@ -283,11 +283,11 @@ print.summaryPB <- function(x,...){
 plot.PBmodcomp <- function(x, ...){
 
   ref <-x$ref
-  
+
   ndf  <- x$test$df[1]
   u    <-summary(x)
   ddf  <-u$test['F','ddf']
-  
+
   EE   <- mean(ref)
   VV   <- var(ref)
   sc   <- var(ref)/mean(ref)
@@ -300,12 +300,12 @@ plot.PBmodcomp <- function(x, ...){
   #tail.prob <- c(0.0001, 0.001, 0.01, 0.05, 0.10, 0.20, 0.5)
   tail.prob <-seq(0.001, upper, length.out = 1111)
   PBquant   <- quantile(ref,1-tail.prob) ## tail prob for PB dist
-  
+
   pLR       <- pchisq(PBquant,df=ndf,           lower.tail=FALSE)
   pF        <- pf(PBquant/ndf,df1=ndf,df2=ddf,  lower.tail=FALSE)
   pGamma    <- pgamma(PBquant,scale=sc,shape=sh,lower.tail=FALSE)
   pBart     <- pchisq(B*PBquant,df=ndf,         lower.tail=FALSE)
-  
+
   sym.vec <- c(2,4,5,6)
   lwd     <- 2
   plot(pLR~tail.prob,type='l', lwd=lwd, #log="xy",
@@ -316,12 +316,12 @@ plot.PBmodcomp <- function(x, ...){
   lines(pBart~tail.prob,lwd=lwd,  col=sym.vec[3], lty=sym.vec[3])
   lines(pGamma~tail.prob,lwd=lwd, col=sym.vec[4], lty=sym.vec[4])
   abline(c(0,1))
-  
+
   ZF     <-bquote(paste("F(1,",.(round(ddf,2)),")"))
   Zgamma <-bquote(paste("gamma(scale=",.(round(sc,2)),", shape=", .(round(sh,2)),")" ))
-  ZLRT   <-bquote(paste(chi[1]^2))
-  ZBart  <-bquote(paste("Bartlett scaled ", chi[1]^2))
-  
+  ZLRT   <-bquote(paste(chi[.(ndf)]^2))
+  ZBart  <-bquote(paste("Bartlett scaled ", chi[.(ndf)]^2))
+
   legend(0.001,upper,legend=as.expression(c(ZLRT,ZF,ZBart,Zgamma)),
          lty=sym.vec,col=sym.vec,lwd=lwd)
 }
@@ -342,18 +342,18 @@ as.data.frame.XXmodcomp <- function(x, row.names = NULL, optional = FALSE, ...){
 ##   dd  <- density(ref)
 ##   sc  <- var(ref)/mean(ref)
 ##   sh  <- mean(ref)^2/var(ref)
-  
+
 ##   hist(ref, prob=TRUE,nclass=20, main="Reference distribution")
 ##   abline(v=tobs)
 ##   lines(dd, lty=2, col=2, lwd=2)
 ##   lines(xx,dchisq(xx,df=test$LRT['df']), lty=3, col=3, lwd=2)
 ##   lines(xx,dgamma(xx,scale=sc, shape=sh), lty=4, col=4, lwd=2)
 ##   lines(xx,df(xx,df1=test$F['df'], df2=test$F['ddf']), lty=5, col=5, lwd=2)
-  
+
 ##   smartlegend(x = 'right', y = 'top',
 ##               legend = c("kernel density", "chi-square", "gamma","F"),
 ##               col = 2:5, lty = 2:5)
-  
+
 ## }
 
 
@@ -366,7 +366,7 @@ as.data.frame.XXmodcomp <- function(x, row.names = NULL, optional = FALSE, ...){
 ##               EE, VV, rho, lam2))
 
 ##   ddf2 <- 4 + (ndf+2)/(rho*ndf-1)
-  
+
 ##   Fobs2 <- lam2 * tobs/ndf
 ##   if (ddf2>0)
 ##     p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)

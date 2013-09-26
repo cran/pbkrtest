@@ -2,6 +2,8 @@
 \alias{KRmodcomp}
 \alias{KRmodcomp.mer}
 \alias{KRmodcomp.lmerMod}
+\alias{KRmodcomp_internal}
+
 \title{Ftest and degrees of freedom based on Kenward-Roger approximation}
 \description{
   An approximate F-test based on the Kenward-Roger 

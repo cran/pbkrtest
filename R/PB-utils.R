@@ -28,7 +28,7 @@ restrictionMatrix2model <- function(largeModel, LL){
   UseMethod("restrictionMatrix2model")
 }
 
-restrictionMatrix2model.lmerMod <-
+restrictionMatrix2model.merMod <-
   restrictionMatrix2model.mer <-
   function(largeModel, LL){
 
@@ -83,7 +83,7 @@ getLRT <- function(largeModel, smallModel){
   UseMethod("getLRT")
 }
 
-getLRT.lmerMod <-
+getLRT.merMod <-
   getLRT.mer <-
   function(largeModel, smallModel){
     ll.small <- logLik(smallModel, REML=FALSE)

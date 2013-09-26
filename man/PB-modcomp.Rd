@@ -2,11 +2,11 @@
 \alias{PBmodcomp}
 \alias{PBmodcomp.lm}
 \alias{PBmodcomp.mer}
-\alias{PBmodcomp.lmerMod}
+\alias{PBmodcomp.merMod}
 \alias{getLRT}
 \alias{getLRT.lm}
 \alias{getLRT.mer}
-\alias{getLRT.lmerMod}
+\alias{getLRT.merMod}
 
 \alias{plot.XXmodcomp}
 
@@ -19,9 +19,9 @@
 }
 \usage{
 PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
-\method{PBmodcomp}{lm}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
-\method{PBmodcomp}{mer}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
-\method{PBmodcomp}{lmerMod}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
+%\method{PBmodcomp}{lm}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
+%\method{PBmodcomp}{mer}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
+%\method{PBmodcomp}{lmerMod}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

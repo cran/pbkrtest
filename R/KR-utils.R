@@ -25,15 +25,17 @@
 }
 .indexVec2Symmat<-function(k,N) {
   ## inverse of indexSymmat2vec
-  ##result: index pair (i,j) with i>=j
-  ##k: element in the vector r of upper triangular
-  ##elements
-  aa<-cumsum(N:1)
-  aaLow<-c(0,aa[-length(aa)])
-  i<-which( aaLow<k & k<=aa)
-  j<-k-N*i+N-i*(3-i)/2+i
-  return(c(i,j))
+  ## result: index pair (i,j) with i>=j
+  ## k: element in the vector of upper triangular elements
+  ## example: N=3: k=1 -> (1,1), k=2 -> (1,2), k=3 -> (1,3), k=4 -> (2,2)
+  aa    <- cumsum(N:1)
+  aaLow <- c(0,aa[-length(aa)])
+  i     <- which( aaLow<k & k<=aa)
+  j     <- k-N*i+N-i*(3-i)/2+i
+  return( c(i,j) )
 }
+
+.index2UpperTriEntry <- .indexVec2Symmat
 
 .divZero<-function(x,y,tol=1e-14){
   ## ratio x/y is set to 1 if both |x| and |y| are below tol

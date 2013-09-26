@@ -3,7 +3,7 @@
 \alias{restrictionMatrix2model}
 \alias{restrictionMatrix2model.lm}
 \alias{restrictionMatrix2model.mer}
-\alias{restrictionMatrix2model.lmerMod}
+\alias{restrictionMatrix2model.merMod}
 
 \alias{print.PBmodcomp}
 \alias{print.summaryPB}

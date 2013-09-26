@@ -1,31 +1,28 @@
 
 ## --------------------------------------------------------------------
 ## Calculate the adjusted covariance matrix for a mixed model
+##
+## Implemented in Banff, august 2013; Søren Højsgaard
 ## --------------------------------------------------------------------
 
-vcovAdj0 <- function(object, details=0) {
+vcovAdj <- function(object, details=0){
+  UseMethod("vcovAdj")
+}
+
+vcovAdj.lmerMod <- vcovAdj.mer <- function(object, details=0){
+  Phi      <- vcov(object)
+  SigmaG   <- get_SigmaG( object, details )
+  X        <- getME(object,"X")
+  vcovAdj_internal( Phi, SigmaG, X, details=details)
+}
+
+vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
+
   DB <- details > 0 ## debugging only
   
-  if(!.is.lmm(object)) {
-    cat("Error in vccovAdj\n")
-    cat(sprintf("model is not a linear mixed moxed model fitted with lmer\n"))
-    stop()
-  }
-  
-  if (!(getME(object, "is_REML"))){    #cat("\n object has been refitted with REML=TRUE \n")
-    object <- update(object, .~., REML=TRUE)
-  }
-  
-  ## Ready to go...
-  
-  X        <- getME(object,"X")
-  Phi      <- vcov(object)
-  SigmaG   <- LMM_Sigma_G( object, details )
-
-
-  
   SigmaInv <- chol2inv( chol( forceSymmetric(SigmaG$Sigma) ) )
-  if(DB){cat(sprintf("Finding SigmaInv: %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
+  if(DB){cat(sprintf("Finding SigmaInv: %10.5f\n", (proc.time()-t0)[1] ));
+         t0 <- proc.time()}
   
   ## Finding, TT, HH, 00
   n.ggamma <- SigmaG$n.ggamma
@@ -37,7 +34,7 @@ vcovAdj0 <- function(object, details=0) {
     OO[[ii]] <- .DUM %*% X
   }
   if(DB){cat(sprintf("Finding TT,HH,OO  %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
-
+  
   ## Finding PP, QQ
   PP <- QQ <- NULL
   for (rr in 1:n.ggamma) {
@@ -94,23 +91,6 @@ vcovAdj0 <- function(object, details=0) {
   attr(PhiA, "W")     <-W
   attr(PhiA, "condi") <- condi
   PhiA
+  
+  
 }
-
-
-
- ## Nov. 24. 2011; SHD
-  ## Alternative computation of Ktrace. Seems to be no faster than the one above but please do
-  ## not delete
-  ##     Ktrace2 <- matrix(NA,n.ggamma,n.ggamma)
-  ##     for (rr in 1:n.ggamma) {
-  ##       HrTrans<-t(H[[rr]])
-  ##       Ktrace2[rr,rr] <- sum( HrTrans * t(HrTrans))
-  ##       if (rr < n.ggamma){
-  ##         for (ss in (rr+1):n.ggamma) {
-  ##           Ktrace2[rr,ss] <- Ktrace2[ss,rr]<- sum( HrTrans * H[[ss]])
-  ##         }}}
-  ##     cat(sprintf("Finding Ktrace(2): %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()
-  ##     print(Ktrace)
-  ##     print(Ktrace2)
-  ##     print(Ktrace2-Ktrace)
- 

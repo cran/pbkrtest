@@ -61,7 +61,7 @@ mat <- factor(c(rep("A", 10), rep("B",10)))
 ## Balanced data:
 shoe.b <- data.frame(wear=unlist(shoes), boy=boy, boyf=boyf, mat=mat)
 head(shoe.b)
-## Imbalanced data; delete boy=1, mat=1 and boy=2, mat=b
+## Imbalanced data; delete (boy=1, mat=1) and (boy=2, mat=b)
 shoe.i <-  shoe.b[-c(1,12),]
 
 
@@ -113,45 +113,46 @@ t.test(shoes2$A, shoes2$B, paired=T)
 
 
 ###################################################
-### code chunk number 16: pbkrtest-introduction.Rnw:204-205
+### code chunk number 16: pbkrtest-introduction.Rnw:206-207
 ###################################################
 ( pb.b <- PBmodcomp(lmm1.b, lmm0.b, nsim=500) )
 
 
 ###################################################
-### code chunk number 17: pbkrtest-introduction.Rnw:209-210
+### code chunk number 17: pbkrtest-introduction.Rnw:211-212
 ###################################################
 summary( pb.b )
 
 
 ###################################################
-### code chunk number 18: pbkrtest-introduction.Rnw:218-219
+### code chunk number 18: pbkrtest-introduction.Rnw:220-221
 ###################################################
 ( pb.i<-PBmodcomp(lmm1.i, lmm0.i, nsim=500) )
 
 
 ###################################################
-### code chunk number 19: pbkrtest-introduction.Rnw:223-224
+### code chunk number 19: pbkrtest-introduction.Rnw:225-226
 ###################################################
 summary( pb.i )
 
 
 ###################################################
-### code chunk number 20: pbkrtest-introduction.Rnw:256-259
+### code chunk number 20: pbkrtest-introduction.Rnw:258-262
 ###################################################
 shoe3 <- subset(shoe.b, boy<=5)
+shoe3 <- shoe3[order(shoe3$boy), ]
 lmm1  <- lmer( wear ~ mat + (1|boyf), data=shoe3 )
-SG    <- LMM_Sigma_G( lmm1 )
+str( SG <- get_SigmaG( lmm1 ), max=2)
 
 
 ###################################################
-### code chunk number 21: pbkrtest-introduction.Rnw:263-264
+### code chunk number 21: pbkrtest-introduction.Rnw:266-267
 ###################################################
 round( SG$Sigma*10 )
 
 
 ###################################################
-### code chunk number 22: pbkrtest-introduction.Rnw:268-269
+### code chunk number 22: pbkrtest-introduction.Rnw:271-272
 ###################################################
 SG$G
 
