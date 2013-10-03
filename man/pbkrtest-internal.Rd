@@ -1,5 +1,7 @@
 \name{pbkrtest-internal}
 
+\alias{vcovAdj2}
+
 \alias{restrictionMatrix2model}
 \alias{restrictionMatrix2model.lm}
 \alias{restrictionMatrix2model.mer}
