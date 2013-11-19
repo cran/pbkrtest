@@ -1,3 +1,10 @@
+2013-11-19 Søren Højsgaard <sorenh@math.aau.dk>
+
+	* get_ddf_Lb and ddf_Lb functions added. They provide adjusted
+	degrees of freedom for testing L'beta=0
+
+	* Version 0.3-8 uploaded	
+
 2013-09-26 Søren Højsgaard <sorenh@math.aau.dk>
  
 	* Major reorganizing of KR-related code; preparing for the new
