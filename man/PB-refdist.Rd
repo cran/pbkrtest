@@ -13,7 +13,7 @@
     mixed effects models using parametric bootstrap 
 }
 \usage{
-PBrefdist(largeModel, smallModel, nsim = 1000, seed=NULL, cl = NULL, details = 0)
+PBrefdist(largeModel, smallModel, nsim = 1000, seed=NULL, cl = NULL, details = 0, ...)
 %\method{PBrefdist}{lm}(largeModel, smallModel, nsim = 1000, seed=NULL, cl = NULL, details = 0)
 %\method{PBrefdist}{mer}(largeModel, smallModel, nsim = 1000, seed=NULL, cl = NULL, details = 0)
 %\method{PBrefdist}{merMod}(largeModel, smallModel, nsim = 1000, seed=NULL, cl = NULL, details = 0)
@@ -45,6 +45,10 @@ PBrefdist(largeModel, smallModel, nsim = 1000, seed=NULL, cl = NULL, details = 0
     The amount of output produced. Mainly relevant for debugging
     purposes.
   }
+  \item{...}{
+    Additional arguments. \code{REML=TRUE} can be used to generate a reference 
+    distribution for the restricted LRT when testing for variance components.
+  }
 }
 %%\details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -56,7 +60,7 @@ A numeric vector
 %% ~put references to the literature/web site here ~
 %}
 \author{
-  Søren Højsgaard \email{sorenh@math.aau.dk}
+  S?ren H?jsgaard \email{sorenh@math.aau.dk}
 }
 %\note{
 %%  ~~further notes~~
