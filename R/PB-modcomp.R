@@ -4,11 +4,11 @@
 ###
 ##########################################################
 
-PBmodcomp <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0){
+PBmodcomp <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0, REML=FALSE){
   UseMethod("PBmodcomp")
 }
 
-PBmodcomp.merMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0){
+PBmodcomp.merMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0, REML=FALSE){
 
   ##cat("PBmodcomp.lmerMod\n")
   f.large <- formula(largeModel)
@@ -23,7 +23,7 @@ PBmodcomp.merMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000,
   }
 
   if (is.null(ref)){
-    ref <- PBrefdist(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
+    ref <- PBrefdist(largeModel, smallModel, nsim=nsim, cl=cl, details=details, REML=REML)
   }
 
   samples <- attr(ref, "samples")
@@ -35,7 +35,7 @@ PBmodcomp.merMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000,
     npos <- sum(ref>0)
   }
 
-  LRTstat     <- getLRT(largeModel, smallModel)
+  LRTstat     <- getLRT(largeModel, smallModel, REML=REML)
   ans         <- .finalizePB(LRTstat, ref)
   ans$LRTstat <- LRTstat
   ans$ref     <- ref
@@ -44,7 +44,7 @@ PBmodcomp.merMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000,
   ans
 }
 
-PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0){
+PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, details=0, REML=FALSE){
 
   ok.fam <- c("binomial","gaussian","Gamma","inverse.gaussian","poisson")
   f.large <- formula(largeModel)
@@ -68,7 +68,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, cl=NULL, d
     ref <- PBrefdist(largeModel, smallModel, nsim=nsim, cl=cl, details=details)
   }
 
-  LRTstat     <- getLRT(largeModel, smallModel)
+  LRTstat     <- getLRT(largeModel, smallModel, REML=REML)
   ans         <- .finalizePB(LRTstat, ref)
   ans$LRTstat <- LRTstat
   ans$ref     <- ref

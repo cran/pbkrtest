@@ -5,11 +5,11 @@
 ###
 ### ###########################################################
 
-PBrefdist <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
+PBrefdist <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0, ...){
     UseMethod("PBrefdist")
 }
 
-PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
+PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0, ...){
 
   ##cat(".....PBrefdist.lm\n")
   t0 <- proc.time()
@@ -60,29 +60,29 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, 
 }
 
 
-.get_ref <- function(lg, sm, nsim=20, seed=NULL){
+.get_ref <- function(lg, sm, nsim=20, seed=NULL, REML=FALSE){
     simdata <- simulate(sm, use.u=FALSE, nsim=nsim, seed=seed)
-    sm.logL <- unlist(lapply(simdata, function(dd) logLik( refit(sm, newresp=dd), REML=FALSE)))
-    lg.logL <- unlist(lapply(simdata, function(dd) logLik( refit(lg, newresp=dd), REML=FALSE)))
+    sm.logL <- unlist(lapply(simdata, function(dd) logLik( refit(sm, newresp=dd), REML=REML)))
+    lg.logL <- unlist(lapply(simdata, function(dd) logLik( refit(lg, newresp=dd), REML=REML)))
     ref <- unname(2*(lg.logL - sm.logL))
     ref
 }
 
-.merMod_ref <- function(lg, sm, nsim=20, seed=NULL){
+.merMod_ref <- function(lg, sm, nsim=20, seed=NULL, REML=FALSE){
   simdata <- simulate(sm, nsim=nsim, seed=seed)
   unname(unlist(lapply(simdata, function(yyy){
     sm2     <- refit(sm, newresp=yyy)
     lg2     <- refit(lg, newresp=yyy)
-    2*(logLik( lg2, REML=FALSE ) - logLik( sm2, REML=FALSE ))
+    2*(logLik( lg2, REML=REML ) - logLik( sm2, REML=REML ))
   })))
 }
 
-PBrefdist.mer <- PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
+PBrefdist.mer <- PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0, REML=FALSE){
 
   t0 <- proc.time()
-  if (getME(smallModel, "is_REML"))
+  if (!REML && getME(smallModel, "is_REML"))
     smallModel <- update( smallModel, REML=FALSE )
-  if (getME(largeModel, "is_REML"))
+  if (!REML && getME(largeModel, "is_REML"))
     largeModel <- update( largeModel, REML=FALSE )
 
   .is.cluster <- !is.null(cl) && inherits(cl, "cluster")

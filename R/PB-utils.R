@@ -79,15 +79,15 @@ restrictionMatrix2model.lm <- function(largeModel, LL){
 ###
 ##########################################################
 
-getLRT <- function(largeModel, smallModel){
+getLRT <- function(largeModel, smallModel, ...){
   UseMethod("getLRT")
 }
 
 getLRT.merMod <-
   getLRT.mer <-
-  function(largeModel, smallModel){
-    ll.small <- logLik(smallModel, REML=FALSE)
-    ll.large <- logLik(largeModel, REML=FALSE)
+  function(largeModel, smallModel, REML=FALSE){
+    ll.small <- logLik(smallModel, REML=REML)
+    ll.large <- logLik(largeModel, REML=REML)
     tobs     <- 2*(ll.large-ll.small)
     df11     <- attr(ll.large, "df") - attr(ll.small, "df")
     p.X2     <- 1-pchisq(tobs, df11)
@@ -95,7 +95,7 @@ getLRT.merMod <-
 }
 
 
-getLRT.lm <- function(largeModel, smallModel){
+getLRT.lm <- function(largeModel, smallModel, ...){
   ll.small <- logLik(smallModel)
   ll.large <- logLik(largeModel)
   tobs     <- 2*(ll.large-ll.small)

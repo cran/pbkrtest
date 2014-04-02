@@ -18,7 +18,7 @@
   Model comparison of mixed models using parametric bootstrap methods.
 }
 \usage{
-PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
+PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0, REML=FALSE)
 %\method{PBmodcomp}{lm}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
 %\method{PBmodcomp}{mer}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
 %\method{PBmodcomp}{lmerMod}(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 0)
@@ -54,11 +54,15 @@ PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 
     The amount of output produced. Mainly relevant for debugging
     purposes.
   }
+  \item{REML}{
+    Use REML fits for model comparison? Defaults to FALSE. If TRUE, tests use the
+    restricted likelihood ratio instead of the LR.
+  }
 }
 \details{
   Under the fitted hypothesis (i.e. under the fitted small model)
   \code{nsim} samples of the likelihood ratio test statistic (LRT) are
-  generetated.
+  generated.
 
   Then p-values are calculated as follows:
 
@@ -82,7 +86,7 @@ PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, cl = NULL, details = 
 %  ## To be added...
 %}
 \author{
-  Søren Højsgaard \email{sorenh@math.aau.dk}
+  S?ren H?jsgaard \email{sorenh@math.aau.dk}
 }
 \note{
   This functionality is not thoroughly tested and should be used with
