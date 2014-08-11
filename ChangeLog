@@ -1,9 +1,20 @@
+2014-08-11 Søren Højsgaard <sorenh@math.aau.dk>
+
+	* Extended documentation of PBmodcomp
+
+	* model2restrictionMatrix and restrictionMatrix2model functions
+	have been added.
+	
+	* CITATION file added; references updated to include JSS paper
+
+	* Version 0.4-0 uploaded
+
 2013-11-19 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* get_ddf_Lb and ddf_Lb functions added. They provide adjusted
 	degrees of freedom for testing L'beta=0
 
-	* Version 0.3-8 uploaded	
+	* Version 0.3-8 uploaded
 
 2013-09-26 Søren Højsgaard <sorenh@math.aau.dk>
  
@@ -11,7 +22,7 @@
 	version of lme4 getting on CRAN
 
 	* Package no longer Depends on Matrix, but Imports instead
-	
+
 	* Version 0.3-6 uploaded
 
 2013-07-03 Søren Højsgaard <sorenh@math.aau.dk>

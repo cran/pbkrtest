@@ -4,6 +4,10 @@
 \alias{vcovAdj.mer}
 \alias{vcovAdj_internal}
 \alias{vcovAdj0}
+\alias{vcovAdj2}
+
+
+
 \alias{LMM_Sigma_G}
 
 \alias{get_SigmaG}
@@ -34,8 +38,14 @@ G matrices)}
 }
 
 \references{
+  Ulrich Halekoh, Søren Højsgaard (2014).,
+  A Kenward-Roger Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed Models - The R Package pbkrtest.,
+  Journal of Statistical Software, 58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+
   Kenward, M. G. and Roger, J. H. (1997), \emph{Small Sample Inference 
-    for Fixed Effects from Restricted Maximum Likelihood}, Biometrics 53: 983-997. }
+    for Fixed Effects from Restricted Maximum Likelihood}, Biometrics
+  53: 983-997. 
+}
 
 \note{
   This functionality is not thoroughly tested and should be used with

@@ -31,6 +31,13 @@ KRmodcomp_init(m1, m2, matrixOK=FALSE)
   \item{code}{-1: <m1> =<m2>, 0: <m1> < <m2>, 1: <m1> > <m2>}  
 }
 
+
+\references{
+  Ulrich Halekoh, Søren Højsgaard (2014).,
+  A Kenward-Roger Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed Models - The R Package pbkrtest.,
+  Journal of Statistical Software, 58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+}
+
 \author{
   Ulrich Halekoh \email{ulrich.halekoh@agrsci.dk}, Søren Højsgaard \email{sorenh@math.aau.dk}
 }

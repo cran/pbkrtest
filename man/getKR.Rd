@@ -37,6 +37,14 @@ getKR(object, name = c("ndf", "ddf", "Fstat", "p.value",
 %\references{
 %% ~put references to the literature/web site here ~
 %}
+
+
+\references{
+  Ulrich Halekoh, Søren Højsgaard (2014).,
+  A Kenward-Roger Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed Models - The R Package pbkrtest.,
+  Journal of Statistical Software, 58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+}
+
 \author{
   Søren Højsgaard \email{sorenh@math.aau.dk}  
 }
