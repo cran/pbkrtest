@@ -53,7 +53,7 @@ G matrices)}
 }
 
 \author{
-  Ulrich Halekoh \email{ulrich.halekoh@agrsci.dk}, Søren Højsgaard \email{sorenh@math.aau.dk}
+  Ulrich Halekoh \email{uhalekoh@health.sdu.dk}, Soren Hojsgaard \email{sorenh@math.aau.dk}
 }
 
 

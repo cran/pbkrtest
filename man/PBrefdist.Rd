@@ -64,7 +64,7 @@ A numeric vector
 
 
 \author{
-  Søren Højsgaard \email{sorenh@math.aau.dk}
+  Soren Hojsgaard \email{sorenh@math.aau.dk}
 }
 %\note{
 %%  ~~further notes~~

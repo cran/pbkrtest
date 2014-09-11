@@ -74,7 +74,7 @@ Notice: if you want to test a hypothesis \eqn{L \beta = c} with a
 
 
 \author{
-  Ulrich Halekoh \email{ulrich.halekoh@agrsci.dk}, Søren Højsgaard
+  Ulrich Halekoh \email{ulrich.halekoh@agrsci.dk}, Soren Hojsgaard
   \email{sorenh@math.aau.dk} 
 }
 

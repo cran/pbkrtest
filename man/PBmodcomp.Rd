@@ -88,7 +88,7 @@ PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, seed=NULL,
 }
 
 \author{
-  Søren Højsgaard \email{sorenh@math.aau.dk}
+  Soren Hojsgaard \email{sorenh@math.aau.dk}
 }
 %% \note{
 %%   This functionality is not thoroughly tested and should be used with

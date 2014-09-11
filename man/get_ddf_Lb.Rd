@@ -1,7 +1,7 @@
-\name{get_ddf_Lb}
-\alias{get_ddf_Lb}
-\alias{get_ddf_Lb.lmerMod}
-\alias{ddf_Lb}
+\name{get_Lb_ddf}
+\alias{get_Lb_ddf}
+\alias{get_Lb_ddf.lmerMod}
+\alias{Lb_ddf}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -9,26 +9,30 @@
  mixed model.
 }
 \description{
-  Get adjusted denomintor degress freedom for testing L'beta=0 in a
-  linear mixed model. 
+  Get adjusted denomintor degress freedom for testing Lb=0 in a
+  linear mixed model where L is a restriction matrix.
 }
 \usage{
-get_ddf_Lb(object, Lcoef)
-ddf_Lb(VVa, Lcoef, VV0=VVa)
+get_Lb_ddf(object, L)
+Lb_ddf(L, V0, Vadj)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
     A linear mixed model object.
-}
-  \item{Lcoef}{
-    A vector with the same length as \code{fixef(object)}
   }
-  \item{VVa, VV0}{
-    Adjusted and unadjusted covariance matrix for the fixed effects
-    parameters. Adjusted covariance matrix is obtained with
-    \code{vcovAdj()} and the unadjusted with \code{vcov()}.
-    }
+
+  \item{L}{
+    A vector with the same length as \code{fixef(object)} or a matrix
+    with the same number of columns as the length of \code{fixef(object)}
+  }
+
+  \item{V0, Vadj}{
+    Unadjusted and adjusted covariance matrix for the fixed effects
+    parameters. Undjusted covariance matrix is obtained with
+    \code{vcov()} and adjusted with \code{vcovAdj()}.
+  }
+
 }
 %\details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -45,7 +49,7 @@ ddf_Lb(VVa, Lcoef, VV0=VVa)
 }
 
 \author{
-  Søren Højsgaard, \email{sorenh@math.aau.dk}
+  Soren Hojsgaard, \email{sorenh@math.aau.dk}
 }
 %% \note{
 %% %%  ~~further notes~~
@@ -54,11 +58,25 @@ ddf_Lb(VVa, Lcoef, VV0=VVa)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-  \code{\link{KRmodcomp}}
-  \code{\link{vcovAdj}}
+  \code{\link{KRmodcomp}},
+  \code{\link{vcovAdj}},
+  \code{\link{model2restrictionMatrix}},
+  \code{\link{restrictionMatrix2model}}
+
 }
 \examples{
-## To be written
+(fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+## removing Days
+(fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+anova(fmLarge,fmSmall)
+
+KRmodcomp(fmLarge,fmSmall)  ## 17 denominator df's
+get_Lb_ddf(fmLarge, c(0,1)) ## 17 denominator df's
+
+# Notice: The restriction matrix L corresponding to the test above
+# can be found with
+L<-model2restrictionMatrix(fmLarge, fmSmall)
+L
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
