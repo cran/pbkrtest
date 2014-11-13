@@ -1,5 +1,5 @@
 ### R code from vignette source 'pbkrtest-introduction.Rnw'
-### Encoding: UTF-8
+### Encoding: ISO8859-1
 
 ###################################################
 ### code chunk number 1: pbkrtest-introduction.Rnw:19-22

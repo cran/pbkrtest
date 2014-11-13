@@ -1,6 +1,6 @@
-337e3d0f250a0ac7f0cfc1ccad6290f1 *ChangeLog
-69eadb9d7d31b5e7a4713f1fe0c63b20 *DESCRIPTION
-6eb49fd7db760fb00b8f3810d8b470db *NAMESPACE
+40b25880e5d95747a9625c91ea25f970 *ChangeLog
+0f9ed4806274651e9dd09da0fb471385 *DESCRIPTION
+3fb5f77bebbd52b772b7810e4c3ef5fd *NAMESPACE
 814e8393279ebfb4345311b8fcc8c219 *R/KR-Sigma-G.R
 de88cde64c76abaa274e20a4c29ce68f *R/KR-Sigma-G2.R
 64cefb9ec857da4dfddbabf995ec3bec *R/KR-across-versions.R
@@ -8,7 +8,7 @@ de88cde64c76abaa274e20a4c29ce68f *R/KR-Sigma-G2.R
 3da66f60d974e5be471802e500ddfc24 *R/KR-linearAlgebra.R
 962d328f8ac9237793585b45a76b51a7 *R/KR-modcomp.R
 06bfe68190fe74b5a038c07ebfc436da *R/KR-utils.R
-8581f0444f22f4ae571b97233f2a9893 *R/KR-vcovAdj.R
+983e2a8427b3887aae726323060b949b *R/KR-vcovAdj.R
 289c1438a139656e5fe9327644314f56 *R/KR-vcovAdj0.R
 a43e19844adefaaf23c1e42112c9fdc1 *R/KR-vcovAdj2-prev.R
 7289d3bc33a9b1e17664fc51453334e1 *R/PB-anova.R
@@ -18,13 +18,13 @@ e23267b42397712def9dffd5324c59e0 *R/PB-utils.R
 85167748f2eba29fdadc0a284b23a20d *R/getKR.R
 a8fefad2ca8e6742d022585ec5f4c069 *R/get_ddf_Lb.R
 22564371bc7437aff688bf911706d726 *R/modelCoercion.R
-2fc1ac42126f0bd46eada316c98fea67 *build/vignette.rds
-d3f24c25654cfe9f89d758c3d37fc9ec *data/beets.txt.gz
-ca79449a9762e1884e18b4849bf5e4ed *data/budworm.txt.gz
+6f91be66edbcc443b1ebbec327a2e31a *build/vignette.rds
+3808972aea6390d90fdf3b138d2ddb68 *data/beets.txt.gz
+b2bcb388ad550877af8490dfdd7192f9 *data/budworm.txt.gz
 6df259258a0503209da79d379f74c283 *inst/CITATION
-0744819ce2231310e601c6d81d5e5b03 *inst/doc/pbkrtest-introduction.R
+fcddc1a438afae5dea7d8ba7c0f9da2f *inst/doc/pbkrtest-introduction.R
 3c66cc717f0d3eeeff84ea73a99449ad *inst/doc/pbkrtest-introduction.Rnw
-708d90b606437d59cd41655b00eeea55 *inst/doc/pbkrtest-introduction.pdf
+d5f7a9feca4328c55287f2e7d5ca4178 *inst/doc/pbkrtest-introduction.pdf
 5fe2a5261aa8b6f2fd34d34908339c31 *man/DATA-beets.Rd
 2f13b620f86eb546893a70c6175749a4 *man/DATA-budworm.Rd
 8c93cec14ad262fabb2f467f7ca8fd1c *man/KRmodcomp.Rd

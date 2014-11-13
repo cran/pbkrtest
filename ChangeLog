@@ -1,3 +1,10 @@
+2014-11-11 Søren Højsgaard <sorenh@math.aau.dk>
+
+	* Package no longer Depend(s) on MASS
+
+	* Version 0.4-2 uploaded
+
+
 2014-09-08 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* vcovAdj was very slow on large problems. Thanks to John Fox for
@@ -7,7 +14,7 @@
 	* get_Lb_ddf function and method for linear mixed models added.
 
 	* Lb_ddf function added
-	
+
 	* Version 0.4-1 uploaded
 
 2014-08-11 Søren Højsgaard <sorenh@math.aau.dk>

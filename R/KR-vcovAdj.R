@@ -16,20 +16,9 @@ vcovAdj.lmerMod <- vcovAdj.mer <- function(object, details=0){
     Phi      <- vcov(object)
     SigmaG   <- get_SigmaG( object, details )
     X        <- getME(object,"X")
-    ##cat("extraction done \n")
     vcovAdj_internal( Phi, SigmaG, X, details=details)
 }
 
-## foo <- function(S){
-##     print(class(S))
-## #    print(system.time({}))
-## #    print(system.time({SigmaInv <- chol2inv( Sig.chol )}))
-##     S.chol <- chol( S )
-##     print(class(S.chol))
-##     SInv <- chol2inv( S.chol )
-##     print(class(SInv))
-##     SInv
-## }
 
 vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
 
