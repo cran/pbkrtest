@@ -8,7 +8,9 @@ PBmodcomp <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl
   UseMethod("PBmodcomp")
 }
 
-PBmodcomp.merMod <- PBmodcomp.mer <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
+PBmodcomp.merMod <-
+    PBmodcomp.mer <-
+    function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
 
   ##cat("PBmodcomp.lmerMod\n")
   f.large <- formula(largeModel)
@@ -146,25 +148,30 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
   p.Ga    <- 1-pgamma(tobs, shape=shape, scale=scale)
 
   ## Fit T/d to F-distribution (1. moment)
-  ddf  <- 2*EE/(EE-ndf)
+
+  ## FIXME: Think the formula is 2*EE/(EE-1)
+  ##ddf  <- 2*EE/(EE-ndf)
+  ddf  <- 2*EE/(EE-1)
   Fobs <- tobs/ndf
-  p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
+  if (ddf>0)
+      p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
+  else
+      p.FF <- NA
 
   ## Fit T/d to F-distribution (1. AND 2. moment)
-##   EE2   <- EE/ndf
-##   VV2   <- VV/ndf^2
+  #' EE2   <- EE/ndf
+  #' VV2   <- VV/ndf^2
 
-##   rho   <- VV2/(2*EE2^2)
-##   ddf2  <- 4 + (ndf+2)/(rho*ndf-1)
-##   lam2  <- (ddf/EE2*(ddf-2))
-##   Fobs2 <- lam2 * tobs/ndf
-##   if (ddf2>0)
-##     p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)
-##   else
-##     p.FF2 <- NA
+  #' rho   <- VV2/(2*EE2^2)
+  #' ddf2  <- 4 + (ndf+2)/(rho*ndf-1)
+  #' lam2  <- (ddf/EE2*(ddf-2))
+  #' Fobs2 <- lam2 * tobs/ndf
+  #' if (ddf2>0)
+  #'   p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)
+  #' else
+  #'   p.FF2 <- NA
 
-##   cat(sprintf("PB: EE=%f, VV=%f, rho=%f, lam2=%f\n",
-##               EE, VV, rho, lam2))
+  #' cat(sprintf("PB: EE=%f, ndf=%f VV=%f, ddf=%f\n", EE, ndf, VV, ddf))
 
 
 

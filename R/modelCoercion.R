@@ -56,7 +56,8 @@ model2restrictionMatrix <- function (largeModel, smallModel) {
 
 
 model2restrictionMatrix.merMod <-
-    model2restrictionMatrix.mer <- function (largeModel, smallModel) {
+    model2restrictionMatrix.mer <-
+        function (largeModel, smallModel) {
         L <- if(is.matrix(smallModel)) {
             ## ensures  that L is of full row rank:
             LL <- smallModel
@@ -126,7 +127,7 @@ restrictionMatrix2model <- function(largeModel, LL){
 }
 
 restrictionMatrix2model.merMod <-
-  restrictionMatrix2model.mer <-
+    restrictionMatrix2model.mer <-
   function(largeModel, LL){
 
   XX.lg 	 <- getME(largeModel, "X")

@@ -2,7 +2,9 @@ KRmodcomp <- function(largeModel, smallModel,betaH=0, details=0){
     UseMethod("KRmodcomp")
 }
 
-KRmodcomp.lmerMod<-KRmodcomp.mer<-function(largeModel, smallModel, betaH=0, details=0) {
+KRmodcomp.lmerMod<-
+    KRmodcomp.mer<-
+        function(largeModel, smallModel, betaH=0, details=0) {
   ## 'smallModel' can either be an lmerMod (linear mixed) model or a restriction matrix L.
   w <- KRmodcomp_init(largeModel, smallModel, matrixOK = TRUE)
   if (w==-1) {
@@ -64,8 +66,6 @@ KRmodcomp.lmerMod<-KRmodcomp.mer<-function(largeModel, smallModel, betaH=0, deta
   ans
 }
 
-
-
 KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
 
   PhiA  <- vcovAdj(largeModel, details)
@@ -74,8 +74,6 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
   ans   <- .finalizeKR(stats)
   ans
 }
-
-
 
 
 ## --------------------------------------------------------------------

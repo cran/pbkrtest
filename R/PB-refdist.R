@@ -1,4 +1,3 @@
-
 ### ###########################################################
 ###
 ### Parallel computing of reference distribution
@@ -73,7 +72,8 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, 
 
 
 
-PBrefdist.mer <- PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
+PBrefdist.mer <-
+PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
 
   t0 <- proc.time()
   if (getME(smallModel, "is_REML"))
@@ -99,6 +99,28 @@ PBrefdist.mer <- PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000,
 
   ref
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## .get_ref <- function(lg, sm, nsim=20, seed=NULL){
 ##     simdata <- simulate(sm, use.u=FALSE, nsim=nsim, seed=seed)

@@ -10,8 +10,8 @@ getLRT <- function(largeModel, smallModel){
 }
 
 getLRT.merMod <-
-  getLRT.mer <-
-  function(largeModel, smallModel){
+    getLRT.mer <-
+        function(largeModel, smallModel){
     ll.small <- logLik(smallModel, REML=FALSE)
     ll.large <- logLik(largeModel, REML=FALSE)
     tobs     <- 2*(ll.large-ll.small)

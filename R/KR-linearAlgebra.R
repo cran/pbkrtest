@@ -1,13 +1,13 @@
 .spur<-function(U){
-  sum(diag(U))
+    sum(diag(U))
 }
 
 .orthComplement<-function(W) {
-  ##orthogonal complement of <W>: <W>orth=<Worth>
-  rW    <- rankMatrix(W)
-  Worth <- qr.Q(qr(cbind(W)),
-                complete=TRUE)[,-c(1:rW),drop=FALSE]
-  Worth
+    ##orthogonal complement of <W>: <W>orth=<Worth>
+    rW    <- rankMatrix(W)
+    Worth <- qr.Q(qr(cbind(W)),
+                  complete=TRUE)[,-c(1:rW),drop=FALSE]
+    Worth
 }
 
 

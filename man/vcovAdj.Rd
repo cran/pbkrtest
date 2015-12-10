@@ -1,17 +1,18 @@
 \name{vcovAdj}
 \alias{vcovAdj}
 \alias{vcovAdj.lmerMod}
-\alias{vcovAdj.mer}
 \alias{vcovAdj_internal}
 \alias{vcovAdj0}
 \alias{vcovAdj2}
 
+\alias{vcovAdj.mer}
 
 
 \alias{LMM_Sigma_G}
 
 \alias{get_SigmaG}
 \alias{get_SigmaG.lmerMod}
+
 \alias{get_SigmaG.mer}
 
 

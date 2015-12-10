@@ -6,94 +6,94 @@
 
 LMM_Sigma_G  <- function(object, details=0) { 
 
-  DB     <- details > 0 ## For debugging only
-  
-  if (!.is.lmm(object))
-    stop("'object' is not Gaussian linear mixed model")
-  
-  GGamma <- VarCorr(object)  
-  ## Indexing of the covariance matrix;
-  ## this is somewhat technical and tedious
-  Nindex <- .get_indices(object)
-
-  ## number of random effects in each groupFac; note: residual error excluded!
-  n.groupFac <- Nindex$n.groupFac
-
-  ## the number of random effects for each grouping factor
-  nn.groupFacLevels <- Nindex$nn.groupFacLevels
-
-  ## size of the symmetric variance Gamma_i for reach groupFac
-  nn.GGamma <- Nindex$nn.GGamma
-
-  ## number of variance parameters of each GGamma_i  
-  mm.GGamma   <-  Nindex$mm.GGamma
-                                        
-  ## not sure what this is...
-  group.index <- Nindex$group.index
- 
-  ## writing the covariance parameters for the random effects into a vector: 
-  ggamma <- NULL
-  for ( ii in 1:(n.groupFac) ) {
-    Lii <- GGamma[[ii]]
-    nu  <- ncol(Lii)
-    ## Lii[lower.tri(Lii,diag=TRUE)= Lii[1,1],Lii[1,2],Lii[1,3]..Lii[1,nu],
-    ##                               Lii[2,2], Lii[2,3] ...
-    ggamma<-c(ggamma,Lii[lower.tri(Lii,diag=TRUE)])
-  }
-
-  ## extend ggamma by the residuals variance such that everything random is included
-  ggamma   <- c( ggamma, sigma( object )^2 )
-  n.ggamma <- length(ggamma)
-
-  ## Find G_r:
-  Zt <- getME( object, "Zt" )
-
-  t0 <- proc.time()
-  G  <- NULL
-  ##cat(sprintf("n.groupFac=%i\n", n.groupFac))
-  for (ss in 1:n.groupFac) {
-    ZZ <- .get_Zt_group(ss, Zt, object)
-    ##cat("ZZ\n"); print(ZZ)
+    DB     <- details > 0 ## For debugging only
     
-    n.levels <- nn.groupFacLevels[ss]
-    ##cat(sprintf("n.levels=%i\n", n.levels))
+    if (!.is.lmm(object))
+        stop("'object' is not Gaussian linear mixed model")
     
-    Ig <- sparseMatrix(1:n.levels, 1:n.levels, x=1)
-    ##print(Ig)
-    for (rr in 1:mm.GGamma[ss]) {
-      ii.jj <- .indexVec2Symmat(rr,nn.GGamma[ss])
-      ##cat("ii.jj:"); print(ii.jj)
-      ii.jj <- unique(ii.jj)
-      
-      if (length(ii.jj)==1){
-        EE <- sparseMatrix(ii.jj, ii.jj, x=1, dims=rep(nn.GGamma[ss],2))
-      } else {
-        EE <- sparseMatrix(ii.jj, ii.jj[2:1], dims=rep(nn.GGamma[ss],2))
-      }
-      ##cat("EE:\n");print(EE)
-      
-      EE <- Ig %x% EE  ## Kronecker product
-      G  <- c( G, list( t(ZZ) %*% EE %*% ZZ ) )
+    GGamma <- VarCorr(object)  
+    ## Indexing of the covariance matrix;
+    ## this is somewhat technical and tedious
+    Nindex <- .get_indices(object)
+    
+    ## number of random effects in each groupFac; note: residual error excluded!
+    n.groupFac <- Nindex$n.groupFac
+    
+    ## the number of random effects for each grouping factor
+    nn.groupFacLevels <- Nindex$nn.groupFacLevels
+    
+    ## size of the symmetric variance Gamma_i for reach groupFac
+    nn.GGamma <- Nindex$nn.GGamma
+    
+    ## number of variance parameters of each GGamma_i  
+    mm.GGamma   <-  Nindex$mm.GGamma
+    
+    ## not sure what this is...
+    group.index <- Nindex$group.index
+    
+    ## writing the covariance parameters for the random effects into a vector: 
+    ggamma <- NULL
+    for ( ii in 1:(n.groupFac) ) {
+        Lii <- GGamma[[ii]]
+        nu  <- ncol(Lii)
+        ## Lii[lower.tri(Lii,diag=TRUE)= Lii[1,1],Lii[1,2],Lii[1,3]..Lii[1,nu],
+        ##                               Lii[2,2], Lii[2,3] ...
+        ggamma<-c(ggamma,Lii[lower.tri(Lii,diag=TRUE)])
     }
-  }
-
-  ## Extend by the indentity for the residual
-  nobs <- nrow(getME(object,'X'))
-  G    <- c( G, list(sparseMatrix(1:nobs, 1:nobs, x=1 )) ) 
-
-  
-  if(DB){cat(sprintf("Finding G  %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
-  
-  Sigma <- ggamma[1] * G[[1]]
-  for (ii in 2:n.ggamma) {
-    Sigma <- Sigma + ggamma[ii] * G[[ii]]
-  }
-  
-  if(DB){cat(sprintf("Finding Sigma:    %10.5f\n", (proc.time()-t0)[1] ));
-         t0 <- proc.time()}
-  
-  SigmaG <- list(Sigma=Sigma, G=G, n.ggamma=n.ggamma)
-  SigmaG
+    
+    ## extend ggamma by the residuals variance such that everything random is included
+    ggamma   <- c( ggamma, sigma( object )^2 )
+    n.ggamma <- length(ggamma)
+    
+    ## Find G_r:
+    Zt <- getME( object, "Zt" )
+    
+    t0 <- proc.time()
+    G  <- NULL
+    ##cat(sprintf("n.groupFac=%i\n", n.groupFac))
+    for (ss in 1:n.groupFac) {
+        ZZ <- .get_Zt_group(ss, Zt, object)
+        ##cat("ZZ\n"); print(ZZ)
+        
+        n.levels <- nn.groupFacLevels[ss]
+        ##cat(sprintf("n.levels=%i\n", n.levels))
+        
+        Ig <- sparseMatrix(1:n.levels, 1:n.levels, x=1)
+        ##print(Ig)
+        for (rr in 1:mm.GGamma[ss]) {
+            ii.jj <- .indexVec2Symmat(rr,nn.GGamma[ss])
+            ##cat("ii.jj:"); print(ii.jj)
+            ii.jj <- unique(ii.jj)
+            
+            if (length(ii.jj)==1){
+                EE <- sparseMatrix(ii.jj, ii.jj, x=1, dims=rep(nn.GGamma[ss],2))
+            } else {
+                EE <- sparseMatrix(ii.jj, ii.jj[2:1], dims=rep(nn.GGamma[ss],2))
+            }
+            ##cat("EE:\n");print(EE)
+            
+            EE <- Ig %x% EE  ## Kronecker product
+            G  <- c( G, list( t(ZZ) %*% EE %*% ZZ ) )
+        }
+    }
+    
+    ## Extend by the indentity for the residual
+    nobs <- nrow(getME(object,'X'))
+    G    <- c( G, list(sparseMatrix(1:nobs, 1:nobs, x=1 )) ) 
+    
+    
+    if(DB){cat(sprintf("Finding G  %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
+    
+    Sigma <- ggamma[1] * G[[1]]
+    for (ii in 2:n.ggamma) {
+        Sigma <- Sigma + ggamma[ii] * G[[ii]]
+    }
+    
+    if(DB){cat(sprintf("Finding Sigma:    %10.5f\n", (proc.time()-t0)[1] ));
+        t0 <- proc.time()}
+    
+    SigmaG <- list(Sigma=Sigma, G=G, n.ggamma=n.ggamma)
+    SigmaG
 }  
 
 .get_indices <-function(object) {

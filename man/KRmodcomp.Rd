@@ -1,8 +1,10 @@
 \name{KenwardRoger}
 \alias{KRmodcomp}
-\alias{KRmodcomp.mer}
 \alias{KRmodcomp.lmerMod}
 \alias{KRmodcomp_internal}
+
+\alias{KRmodcomp.mer}
+
 
 \title{Ftest and degrees of freedom based on Kenward-Roger approximation}
 \description{
@@ -11,7 +13,7 @@
 }
 \usage{
 KRmodcomp(largeModel, smallModel, betaH=0, details=0)
-\method{KRmodcomp}{mer}(largeModel, smallModel, betaH=0, details=0)
+%%\method{KRmodcomp}{mer}(largeModel, smallModel, betaH=0, details=0)
 \method{KRmodcomp}{lmerMod}(largeModel, smallModel, betaH=0, details=0)
 }
 	
@@ -26,7 +28,14 @@ KRmodcomp(largeModel, smallModel, betaH=0, details=0)
 }
 
 \details{
-  An F test is calculated according to the approach of Kenward
+	The model \code{object} must be fitted with restricted maximum
+	likelihood (i.e. with \code{REML=TRUE}). If the object is fitted with
+	maximum likelihood (i.e. with \code{REML=FALSE}) then the model is
+	refitted with \code{REML=TRUE} before the p-values are calculated. Put
+	differently, the user needs not worry about this issue.
+
+
+	An F test is calculated according to the approach of Kenward
   and Roger (1997).  The function works for linear mixed models fitted
   with the \code{lmer} function of the \pkg{lme4} package. Only models
   where the covariance structure is a sum of known matrices can be

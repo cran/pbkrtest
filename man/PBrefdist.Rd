@@ -46,9 +46,14 @@ PBrefdist(largeModel, smallModel, nsim = 1000, seed=NULL, cl = NULL, details = 0
     purposes.
   }
 }
-%%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%%}
+\details{
+	The model \code{object} must be fitted with maximum likelihood (i.e. with
+	\code{REML=FALSE}). If the object is fitted with restricted maximum
+	likelihood (i.e. with
+	\code{REML=TRUE}) then the model is refitted with \code{REML=FALSE}
+	before the p-values are calculated. Put differently, the user needs
+	not worry about this issue.
+}
 \value{
 A numeric vector
 }

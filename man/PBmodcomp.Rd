@@ -1,14 +1,19 @@
 \name{PBmodcomp}
 \alias{PBmodcomp}
 \alias{PBmodcomp.lm}
-\alias{PBmodcomp.mer}
+
 \alias{PBmodcomp.merMod}
 \alias{getLRT}
 \alias{getLRT.lm}
-\alias{getLRT.mer}
+
 \alias{getLRT.merMod}
 
+
 \alias{plot.XXmodcomp}
+
+
+\alias{PBmodcomp.mer}
+\alias{getLRT.mer}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -55,7 +60,14 @@ PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, seed=NULL,
   }
 }
 \details{
-  Under the fitted hypothesis (i.e. under the fitted small model)
+	The model \code{object} must be fitted with maximum likelihood (i.e. with
+	\code{REML=FALSE}). If the object is fitted with restricted maximum
+	likelihood (i.e. with
+	\code{REML=TRUE}) then the model is refitted with \code{REML=FALSE}
+	before the p-values are calculated. Put differently, the user needs
+	not worry about this issue.
+
+	Under the fitted hypothesis (i.e. under the fitted small model)
   \code{nsim} samples of the likelihood ratio test statistic (LRT) are
   generetated.
 
@@ -73,6 +85,11 @@ PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, seed=NULL,
   distribution with mean and variance determined as the sample mean and
   sample variance of the simulated LRT-values.
 
+  F: The LRT divided by the number of degrees of freedom is assumed to
+  be F-distributed, where the denominator degrees of freedom are
+  determined by matching the first moment of the reference
+  distribution.
+
 }
 %\value{
 %  ## To be added...
@@ -81,19 +98,45 @@ PBmodcomp(largeModel, smallModel, nsim = 1000, ref = NULL, seed=NULL,
 %  ## To be added...
 %}
 
-\references{
-  Ulrich Halekoh, Søren Højsgaard (2014).,
-  A Kenward-Roger Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed Models - The R Package pbkrtest.,
-  Journal of Statistical Software, 58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
-}
+\references{ Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
+  Approximation and Parametric Bootstrap Methods for Tests in Linear
+  Mixed Models - The R Package pbkrtest., Journal of Statistical
+  Software, 58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/} }
 
 \author{
   Soren Hojsgaard \email{sorenh@math.aau.dk}
 }
-%% \note{
-%%   This functionality is not thoroughly tested and should be used with
-%%   care. Please do report bugs etc.
-%% }
+
+\note{It can happen that some values of the LRT statistic in the
+  reference distribution are negative. When
+  this happens one will see that the number of used samples (those where
+  the LRT is positive) are reported (this number is smaller than the
+  requested number of samples).
+
+  In theory one can not have a negative value of the LRT statistic but
+  in practice on can: We speculate that the reason is as follows: We
+  simulate data under the small model and fit both the small and the
+  large model to the simulated data. Therefore the large model
+  represents - by definition - an overfit; the model has superfluous
+  parameters in it. Therefore the fit of the two models will for some
+  simulated datasets be very similar resulting in similar values of the
+  log-likelihood. There is no guarantee that the the log-likelihood for
+  the large model in practice always will be larger than for the
+  small (convergence problems and other numerical issues can play a role
+  here).
+
+  To look further into the problem, one can use the \code{PBrefdist()}
+  function for simulating the reference distribution (this reference
+  distribution can be provided as input to \code{PBmodcomp()}). Inspection
+  sometimes reveals that while many values are negative, they are
+  numerically very small. In this case one may try to replace the
+  negative values by a small positive value and then invoke
+  \code{PBmodcomp()} to get some idea about how strong influence there
+  is on the resulting p-values. (The p-values get smaller this way
+  compared to the case when only the originally positive values are
+  used).
+ 
+}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

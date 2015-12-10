@@ -1,3 +1,13 @@
+2015-07-12 Søren Højsgaard <sorenh@math.aau.dk>
+
+	* Updated explanation about the samples that are not used in
+	PBmodcomp.
+
+	* Bug fixed in calculating denominator degrees of freedom (ddf)
+	for the F-test
+
+	* Version 0.4-3 uploaded
+
 2014-11-11 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* Package no longer Depend(s) on MASS

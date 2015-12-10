@@ -13,10 +13,12 @@
 \alias{ddf_Lb}
 
 \alias{KRmodcomp_init}
-\alias{KRmodcomp_init.mer}
 \alias{KRmodcomp_init.lmerMod}
 
+\alias{vcovAdj15}
+\alias{vcovAdj15_internal}
 
+\alias{KRmodcomp_init.mer}
 \alias{as.data.frame.XXmodcomp} %% This must go!!
 
 \title{Internal functions in the pbkrtest package}

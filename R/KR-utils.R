@@ -36,18 +36,23 @@
 
 .index2UpperTriEntry <- .indexVec2Symmat
 
-.divZero<-function(x,y,tol=1e-14){
-  ## ratio x/y is set to 1 if both |x| and |y| are below tol
-  x.y <- if( abs(x)<tol & abs(y)<tol) {1} else x/y
-  x.y
+.divZero<-function(x, y, tol=1e-14){
+    ## ratio x/y is set to 1 if both |x| and |y| are below tol
+    x.y <- if( abs(x)<tol & abs(y)<tol) {
+        1
+    }
+    else {
+        x/y
+    }
+    x.y
 }
 
 .is.lmm <- function(object) {
-  if (class(object) %in% c("matrix","Matrix")){
-    FALSE
-  } else {
-    isLMM(object)
-  }
+    if (class(object) %in% c("matrix","Matrix")){
+        FALSE
+    } else {
+        lme4::isLMM(object)
+    }
 }
 
 
