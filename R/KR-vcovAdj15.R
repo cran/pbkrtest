@@ -1,54 +1,37 @@
 
-## --------------------------------------------------------------------
-## Calculate the adjusted covariance matrix for a mixed model
-##
-## Implemented in Banff, august 2013; Søren Højsgaard
-## --------------------------------------------------------------------
+## Work november, 2015 - to gain speed
 
-vcovAdj <- function(object, details=0){
-  UseMethod("vcovAdj")
-}
-
-vcovAdj.lmerMod <-
-    vcovAdj.mer <-
-        function(object, details=0){
-    if (!(getME(object, "is_REML"))) {
-        object <- update(object, . ~ ., REML = TRUE)
+.vcovAdj15 <-
+    function(object, details=0){
+        if (!(getME(object, "is_REML"))) {
+            object <- update(object, . ~ ., REML = TRUE)
+        }
+        Phi      <- vcov(object)
+        SigmaG   <- get_SigmaG( object, details )
+        X        <- getME(object,"X")
+        .vcovAdj15_internal( Phi, SigmaG, X, details=details)
     }
-    Phi      <- vcov(object)
-    SigmaG   <- get_SigmaG( object, details )
-    X        <- getME(object,"X")
-    vcovAdj16_internal( Phi, SigmaG, X, details=details)
-}
 
-
-.vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
-
-    ##cat("vcovAdj_internal\n")
-    ##SG<<-SigmaG
+.vcovAdj15_internal <- function(Phi, SigmaG, X, details=0){
+    details=0
     DB <- details > 0 ## debugging only
 
-    #print("HHHHHHHHHHHHHHH")
-    #print(system.time({chol( forceSymmetric(SigmaG$Sigma) )}))
-    #print(system.time({chol2inv( chol( forceSymmetric(SigmaG$Sigma) ) )}))
-
-    ## print("HHHHHHHHHHHHHHH")
-    ## Sig <- forceSymmetric( SigmaG$Sigma )
-    ## print("HHHHHHHHHHHHHHH")
-    ## print(system.time({Sig.chol <- chol( Sig )}))
-    ## print(system.time({chol2inv( Sig.chol )}))
-
     t0 <- proc.time()
-    ## print("HHHHHHHHHHHHHHH")
     SigmaInv <- chol2inv( chol( forceSymmetric(SigmaG$Sigma) ) )
-    ## print("DONE --- HHHHHHHHHHHHHHH")
 
     if(DB){
         cat(sprintf("Finding SigmaInv: %10.5f\n", (proc.time()-t0)[1] ));
         t0 <- proc.time()
     }
-    ##print("iiiiiiiiiiiii")
 
+    t0 <- proc.time()
+    ## Finding, TT, HH, 00
+    n.ggamma <- SigmaG$n.ggamma
+    TT       <- SigmaInv %*% X
+    HH       <- OO <- vector("list", n.ggamma)
+
+    #mat <<- list(SigmaG=SigmaG, SigmaInv=SigmaInv, X=X)
+    
     t0 <- proc.time()
     ## Finding, TT, HH, 00
     n.ggamma <- SigmaG$n.ggamma
@@ -60,11 +43,7 @@ vcovAdj.lmerMod <-
         OO[[ ii ]] <- .tmp %*% X
     }
     if(DB){cat(sprintf("Finding TT,HH,OO  %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
-    ## if(DB){
-    ##     cat("HH:\n"); print(HH); HH <<- HH
-    ##     cat("OO:\n"); print(OO); OO <<- OO
-    ## }
-
+    
     ## Finding PP, QQ
     PP <- QQ <- NULL
     for (rr in 1:n.ggamma) {
@@ -74,11 +53,10 @@ vcovAdj.lmerMod <-
             QQ <- c(QQ,list(OrTrans %*% SigmaInv %*% OO[[ss]] ))
         }}
     if(DB){cat(sprintf("Finding PP,QQ:    %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
-    ## if(DB){
-    ##     cat("PP:\n"); print(PP); PP2 <<- PP
-    ##     cat("QP:\n"); print(QQ); QQ2 <<- QQ
-    ## }
 
+
+    ##stat15 <<- list(HH=HH, OO=OO, PP=PP, Phi=Phi, QQ=QQ)
+    
     Ktrace <- matrix( NA, nrow=n.ggamma, ncol=n.ggamma )
     for (rr in 1:n.ggamma) {
         HrTrans <- t( HH[[rr]] )
@@ -127,3 +105,7 @@ vcovAdj.lmerMod <-
     attr(PhiA, "condi") <- condi
     PhiA
 }
+
+
+    
+

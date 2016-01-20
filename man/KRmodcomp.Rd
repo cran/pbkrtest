@@ -102,7 +102,7 @@ anova(fmLarge,fmSmall)
 KRmodcomp(fmLarge,fmSmall)
 
 ## The same test using a restriction matrix
-L<-cbind(0,1)
+L <- cbind(0,1)
 KRmodcomp(fmLarge, L)
 
 ## Same example, but with independent intercept and slope effects:

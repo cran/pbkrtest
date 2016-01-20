@@ -1,3 +1,22 @@
+2016-01-12 Søren Højsgaard <sorenh@math.aau.dk>
+
+	* Tunings of vcovAdj in an attempt to gain speed in larger
+	problems. 
+
+	* Illustrated in man page how to mimic vcov using parametric
+	bootstrap. 
+
+	* Updates of man pages
+	
+	* Version 0.4-5 uploaded		
+
+
+2015-12-11 Søren Højsgaard <sorenh@math.aau.dk>
+
+	* Updates to comply with R-devel
+
+	* Version 0.4-4 uploaded	
+
 2015-07-12 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* Updated explanation about the samples that are not used in

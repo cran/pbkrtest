@@ -80,7 +80,7 @@ vcovAdj0 <- function(object, details=0) {
       U <- U + W[ii,jj] * (QQ[[ www ]] - PP[[ii]] %*% Phi %*% PP[[jj]])
     }}
 
-### FIXME: Ulrich: Er det ikke sådan, at du her får beregnet diagonalen med to gange???
+### FIXME: Ulrich: Er det ikke sÃ¥dan, at du her fÃ¥r beregnet diagonalen med to gange???
   U <- U + t(U)
 
   for (ii in 1:n.ggamma) {

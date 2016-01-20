@@ -9,41 +9,45 @@ PBmodcomp <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl
 }
 
 PBmodcomp.merMod <-
-    PBmodcomp.mer <-
+PBmodcomp.mer <-
     function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
+        
+        ##cat("PBmodcomp.lmerMod\n")
+        f.large <- formula(largeModel)
+        attributes(f.large) <- NULL
+        
+        if (inherits(smallModel, c("Matrix", "matrix"))){
+            f.small <- smallModel
+            smallModel <- restrictionMatrix2model(largeModel, smallModel)
+        } else {
+            f.small <- formula(smallModel)
+            attributes(f.small) <- NULL
+        }
+        
+        if (is.null(ref)){
+            ref <- PBrefdist(largeModel, smallModel, nsim=nsim, seed=seed, cl=cl, details=details)
+        }
+        
+        #' samples <- attr(ref, "samples")
+        #' if (!is.null(samples)){
+        #'     nsim <- samples['nsim']
+        #'     npos <- samples['npos']
+        #' } else {
+        #'     nsim <- length(ref)
+        #'     npos <- sum(ref>0)
+        #' }
+        
+        LRTstat     <- getLRT(largeModel, smallModel)
+        ans         <- .finalizePB(LRTstat, ref)
+        .padPB( ans, LRTstat, ref, f.large, f.small)
+    }
 
-  ##cat("PBmodcomp.lmerMod\n")
-  f.large <- formula(largeModel)
-  attributes(f.large) <- NULL
-
-  if (inherits(smallModel, c("Matrix", "matrix"))){
-    f.small <- smallModel
-    smallModel <- restrictionMatrix2model(largeModel, smallModel)
-  } else {
-    f.small <- formula(smallModel)
-    attributes(f.small) <- NULL
-  }
-
-  if (is.null(ref)){
-    ref <- PBrefdist(largeModel, smallModel, nsim=nsim, seed=seed, cl=cl, details=details)
-  }
-
-  samples <- attr(ref, "samples")
-  if (!is.null(samples)){
-    nsim <- samples['nsim']
-    npos <- samples['npos']
-  } else {
-    nsim <- length(ref)
-    npos <- sum(ref>0)
-  }
-
-  LRTstat     <- getLRT(largeModel, smallModel)
-  ans         <- .finalizePB(LRTstat, ref)
-  ans$LRTstat <- LRTstat
-  ans$ref     <- ref
-  ans$f.large <- f.large
-  ans$f.small <- f.small
-  ans
+.padPB <- function(ans, LRTstat, ref, f.large, f.small){
+    ans$LRTstat <- LRTstat
+    ans$ref     <- ref
+    ans$f.large <- f.large
+    ans$f.small <- f.small
+    ans
 }
 
 PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
@@ -72,11 +76,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
 
   LRTstat     <- getLRT(largeModel, smallModel)
   ans         <- .finalizePB(LRTstat, ref)
-  ans$LRTstat <- LRTstat
-  ans$ref     <- ref
-  ans$f.large <- f.large
-  ans$f.small <- f.small
-  ans
+    .padPB( ans, LRTstat, ref, f.large, f.small)    
 }
 
 .finalizePB <- function(LRTstat, ref){
@@ -232,27 +232,29 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
 
 .PBcommon <- function(x){
 
-  cat(sprintf("Parametric bootstrap test; "))
-  if (!is.null((zz<- x$ctime))){
-    cat(sprintf("time: %.2f sec; ", round(zz,2)))
-  }
-  if (!is.null((sam <- x$samples))){
-    cat(sprintf("samples: %d extremes: %d;", sam[1], x$n.extreme))
-  }
-  cat("\n")
-
-
-  if (!is.null((sam <- x$samples))){
-    if (sam[2]<sam[1]){
-      cat(sprintf("Requested samples: %d Used samples: %d Extremes: %d\n",
-                  sam[1], sam[2], x$n.extreme))
+    cat(sprintf("Parametric bootstrap test; "))
+    if (!is.null((zz<- x$ctime))){
+        cat(sprintf("time: %.2f sec; ", round(zz,2)))
     }
-  }
-  if(!is.null(x$f.large)){
-    cat("large : "); print(x$f.large)
-    cat("small : "); print(x$f.small)
-  }
+    if (!is.null((sam <- x$samples))){
+        cat(sprintf("samples: %d extremes: %d;", sam[1], x$n.extreme))
+    }
+    cat("\n")
+    
+    
+    if (!is.null((sam <- x$samples))){
+        if (sam[2]<sam[1]){
+            cat(sprintf("Requested samples: %d Used samples: %d Extremes: %d\n",
+                        sam[1], sam[2], x$n.extreme))
+        }
+    }
+    if(!is.null(x$f.large)){
+        cat("large : "); print(x$f.large)
+        cat("small : "); print(x$f.small)
+    }
 }
+
+
 
 print.PBmodcomp <- function(x, ...){
   .PBcommon(x)

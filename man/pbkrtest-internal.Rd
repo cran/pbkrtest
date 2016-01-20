@@ -17,6 +17,8 @@
 
 \alias{vcovAdj15}
 \alias{vcovAdj15_internal}
+\alias{vcovAdj16}
+\alias{vcovAdj16_internal}
 
 \alias{KRmodcomp_init.mer}
 \alias{as.data.frame.XXmodcomp} %% This must go!!

@@ -85,7 +85,7 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
   W <- attr( PhiA, "W" )
 
   A1 <- A2 <- 0
-  ThetaPhi <- Theta%*%Phi
+  ThetaPhi <- Theta %*% Phi
   n.ggamma <- length(P)
   for (ii in 1:n.ggamma) {
     for (jj in c(ii:n.ggamma)) {
@@ -103,23 +103,23 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
   c1<- g/(3*q+ 2*(1-g))
   c2<- (q-g) / (3*q + 2*(1-g))
   c3<- (q+2-g) / ( 3*q+2*(1-g))
-                                        #  cat(sprintf("q=%i B=%f A1=%f A2=%f\n", q, B, A1, A2))
-                                        #  cat(sprintf("g=%f, c1=%f, c2=%f, c3=%f\n", g, c1, c2, c3))
+  ##  cat(sprintf("q=%i B=%f A1=%f A2=%f\n", q, B, A1, A2))
+  ##  cat(sprintf("g=%f, c1=%f, c2=%f, c3=%f\n", g, c1, c2, c3))
 ###orgDef: E<-1/(1-A2/q)
 ###orgDef: V<- 2/q * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
 
   ##EE     <- 1/(1-A2/q)
-                                        #VV     <- (2/q) * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
+  ##VV     <- (2/q) * (1+c1*B) /  ( (1-c2*B)^2 * (1-c3*B) )
   EE     <- 1 + (A2/q)
   VV     <- (2/q)*(1+B)
   EEstar <- 1/(1-A2/q)
   VVstar <- (2/q)*((1+c1*B)/((1-c2*B)^2 * (1-c3*B)))
-                                        #  cat(sprintf("EE=%f VV=%f EEstar=%f VVstar=%f\n", EE, VV, EEstar, VVstar))
+  ##  cat(sprintf("EE=%f VV=%f EEstar=%f VVstar=%f\n", EE, VV, EEstar, VVstar))
   V0<-1+c1*B
   V1<-1-c2*B
   V2<-1-c3*B
   V0<-ifelse(abs(V0)<1e-10,0,V0)
-                                        #  cat(sprintf("V0=%f V1=%f V2=%f\n", V0, V1, V2))
+  ##  cat(sprintf("V0=%f V1=%f V2=%f\n", V0, V1, V2))
 
 ###orgDef: V<- 2/q* V0 /(V1^2*V2)
 ###orgDef: rho <-  V/(2*E^2)

@@ -2,7 +2,7 @@
 ##
 ## LMM_Sigma_G: Returns VAR(Y) = Sigma and the G matrices
 ##
-## Re-implemented in Banff, Canada, August 2013 by Søren Højsgaard
+## Re-implemented in Banff, Canada, August 2013 by SÃ¸ren HÃ¸jsgaard
 ##
 ## ##############################################################################
 

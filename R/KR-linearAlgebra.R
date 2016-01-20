@@ -20,7 +20,7 @@
 ## .spurAB<-function(A,B){
 ##   sum(A*t.default(B))
 ## }
-## # if A eller B er symmetrisk så er trace(AB)=sum(A*B)
+## # if A eller B er symmetrisk sÃ¥ er trace(AB)=sum(A*B)
 
 
 ## .matrixNullSpace<-function(B,L) {

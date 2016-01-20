@@ -57,9 +57,6 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, 
     ref
 }
 
-
-
-
 .merMod_refDist <- function(lg, sm, nsim=20, seed=NULL, simdata=simulate(sm, nsim=nsim, seed=seed)){
   #simdata <- simulate(sm, nsim=nsim, seed=seed)
   unname(unlist(lapply(simdata, function(yyy){
@@ -69,35 +66,32 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, 
   })))
 }
 
-
-
-
 PBrefdist.mer <-
 PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
 
-  t0 <- proc.time()
-  if (getME(smallModel, "is_REML"))
-    smallModel <- update( smallModel, REML=FALSE )
-  if (getME(largeModel, "is_REML"))
-    largeModel <- update( largeModel, REML=FALSE )
-
-  .is.cluster <- !is.null(cl) && inherits(cl, "cluster")
-  if (!.is.cluster){
-    ref <- .merMod_refDist(largeModel, smallModel, nsim=nsim, seed=seed)
-  } else {
-    nsim.cl <- nsim %/% length(cl)
-    clusterSetRNGStream(cl)
-    ref <- unlist( clusterCall(cl, fun=.merMod_refDist, largeModel, smallModel, nsim=nsim.cl) )
-  }
-
-  ctime <- (proc.time()-t0)[3]
-  attr(ref,"ctime")   <- ctime
-  attr(ref,"samples") <- c(nsim=nsim, npos=sum(ref>0))
-  if (details>0)
-    cat(sprintf("Reference distribution with %5i samples; computing time: %5.2f secs. \n",
-                length(ref), ctime))
-
-  ref
+    t0 <- proc.time()
+    if (getME(smallModel, "is_REML"))
+        smallModel <- update( smallModel, REML=FALSE )
+    if (getME(largeModel, "is_REML"))
+        largeModel <- update( largeModel, REML=FALSE )
+    
+    .is.cluster <- !is.null(cl) && inherits(cl, "cluster")
+    if (!.is.cluster){
+        ref <- .merMod_refDist(largeModel, smallModel, nsim=nsim, seed=seed)
+    } else {
+        nsim.cl <- nsim %/% length(cl)
+        clusterSetRNGStream(cl)
+        ref <- unlist( clusterCall(cl, fun=.merMod_refDist, largeModel, smallModel, nsim=nsim.cl) )
+    }
+    
+    ctime <- (proc.time()-t0)[3]
+    attr(ref,"ctime")   <- ctime
+    attr(ref,"samples") <- c(nsim=nsim, npos=sum(ref>0))
+    if (details>0)
+        cat(sprintf("Reference distribution with %5i samples; computing time: %5.2f secs. \n",
+                    length(ref), ctime))
+    
+    ref
 }
 
 
@@ -117,52 +111,3 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
 
 
 
-
-
-
-
-
-## .get_ref <- function(lg, sm, nsim=20, seed=NULL){
-##     simdata <- simulate(sm, use.u=FALSE, nsim=nsim, seed=seed)
-##     sm.logL <- unlist(lapply(simdata, function(dd) logLik( refit(sm, newresp=dd), REML=FALSE)))
-##     lg.logL <- unlist(lapply(simdata, function(dd) logLik( refit(lg, newresp=dd), REML=FALSE)))
-##     ref <- unname(2*(lg.logL - sm.logL))
-##     ref
-## }
-
-## .merMod_ref <- function(lg, sm, nsim=20, seed=NULL){
-##   simdata <- simulate(sm, nsim=nsim, seed=seed)
-##   unname(unlist(lapply(simdata, function(yyy){
-##     sm2     <- tryCatch(refit(sm, newresp=yyy))
-##     lg2     <- tryCatch(refit(lg, newresp=yyy))
-##     print(c(sm2, lg2))
-##     2*(logLik( lg2, REML=FALSE ) - logLik( sm2, REML=FALSE ))
-##   })))
-## }
-
-
-
-## .lm_ref <- function(lg, sm, nsim=20, seed=NULL, simdata=simulate(sm, nsim=nsim, seed=seed)){
-##     ##simdata <- simulate(sm, nsim, seed=seed)
-##     ee  <- new.env()
-##     ee$simdata <- simdata
-
-##     cl.l <- getCall(lg)
-##     cl.s <- getCall(sm)
-
-##     ff.l <- update.formula(formula(lg),simdata[,ii]~.)
-##     ff.s <- update.formula(formula(sm),simdata[,ii]~.)
-##     environment(ff.l) <- environment(ff.s) <- ee
-##     cl.l$formula <- ff.l
-##     cl.s$formula <- ff.s
-##     cl.l$model <- sm$model
-##     cl.s$model <- sm$model
-##     ## cl.l$data <- sm$data
-##     ## cl.s$data <- sm$data
-
-##     ref <- rep.int(NA,nsim)
-##     for (ii in 1:nsim){
-##         ref[ii] <- 2*(logLik(eval(cl.l))-logLik(eval(cl.s)))
-##     }
-##     ref
-## }

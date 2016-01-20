@@ -2,7 +2,7 @@
 ##
 ## Functionality required to make pbkrtest work both on CRAN and devel versions of lme4
 ##
-## Banff, August 2013, Søren Højsgaard
+## Banff, August 2013, SÃ¸ren HÃ¸jsgaard
 ##
 ## #######################################################################################
 
