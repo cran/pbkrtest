@@ -1,5 +1,5 @@
-1ed080a5b619210b713badd50b848e31 *ChangeLog
-cfc7e2ef3796c7bfb19b8b51188fed15 *DESCRIPTION
+1cc3511e0aca4590f38419db012a81db *ChangeLog
+0c550e25633337b82e5cdc7e20dc7877 *DESCRIPTION
 0306a0a3d6dc0db3544e99f5bd4a45f6 *NAMESPACE
 095d4304dfdb9afe65964055f0c9a3c6 *R/KR-Sigma-G.R
 517beb9d97fc352d9a9aac571f8868fa *R/KR-Sigma-G2.R
@@ -25,7 +25,7 @@ ca79449a9762e1884e18b4849bf5e4ed *data/budworm.txt.gz
 6df259258a0503209da79d379f74c283 *inst/CITATION
 0744819ce2231310e601c6d81d5e5b03 *inst/doc/pbkrtest-introduction.R
 3c66cc717f0d3eeeff84ea73a99449ad *inst/doc/pbkrtest-introduction.Rnw
-a1c5b866065fd3917d64720e3ee72055 *inst/doc/pbkrtest-introduction.pdf
+e062fe1840adfdc11ebf4460ef03ac0c *inst/doc/pbkrtest-introduction.pdf
 5fe2a5261aa8b6f2fd34d34908339c31 *man/DATA-beets.Rd
 2f13b620f86eb546893a70c6175749a4 *man/DATA-budworm.Rd
 38acefe47726a381d69fe03bdd91efaa *man/KRmodcomp.Rd

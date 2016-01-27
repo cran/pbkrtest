@@ -1,3 +1,9 @@
+2016-01-27 Søren Højsgaard <sorenh@math.aau.dk>
+
+	* Update of description file with correct version requirement.
+
+	* Version 0.4-6 uploaded		
+	
 2016-01-12 Søren Højsgaard <sorenh@math.aau.dk>
 
 	* Tunings of vcovAdj in an attempt to gain speed in larger
