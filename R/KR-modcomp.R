@@ -1,78 +1,164 @@
+## ##########################################################################
+##
+#' @title Ftest and degrees of freedom based on Kenward-Roger approximation
+#' 
+#' @description An approximate F-test based on the Kenward-Roger approach.
+#'
+#' @name kr-modcomp
+#' 
+## ##########################################################################
+#' @details The model \code{object} must be fitted with restricted maximum
+#'     likelihood (i.e. with \code{REML=TRUE}). If the object is fitted with
+#'     maximum likelihood (i.e. with \code{REML=FALSE}) then the model is
+#'     refitted with \code{REML=TRUE} before the p-values are calculated. Put
+#'     differently, the user needs not worry about this issue.
+#' 
+#' An F test is calculated according to the approach of Kenward and Roger
+#' (1997).  The function works for linear mixed models fitted with the
+#' \code{lmer} function of the \pkg{lme4} package. Only models where the
+#' covariance structure is a sum of known matrices can be compared.
+#' 
+#' The \code{largeModel} may be a model fitted with \code{lmer} either using
+#' \code{REML=TRUE} or \code{REML=FALSE}.  The \code{smallModel} can be a model
+#' fitted with \code{lmer}. It must have the same covariance structure as
+#' \code{largeModel}. Furthermore, its linear space of expectation must be a
+#' subspace of the space for \code{largeModel}.  The model \code{smallModel}
+#' can also be a restriction matrix \code{L} specifying the hypothesis \eqn{L
+#' \beta = L \beta_H}, where \eqn{L} is a \eqn{k \times p}{k X p} matrix and
+#' \eqn{\beta} is a \eqn{p} column vector the same length as
+#' \code{fixef(largeModel)}.
+#' 
+#' The \eqn{\beta_H} is a \eqn{p} column vector.
+#' 
+#' Notice: if you want to test a hypothesis \eqn{L \beta = c} with a \eqn{k}
+#' vector \eqn{c}, a suitable \eqn{\beta_H} is obtained via \eqn{\beta_H=L c}
+#' where \eqn{L_n} is a g-inverse of \eqn{L}.
+#' 
+#' Notice: It cannot be guaranteed that the results agree with other
+#' implementations of the Kenward-Roger approach!
+#' 
+#' @aliases KRmodcomp KRmodcomp.lmerMod KRmodcomp_internal KRmodcomp.mer
+#' @param largeModel An \code{lmer} model
+#' @param smallModel An \code{lmer} model or a restriction matrix
+#' @param betaH A number or a vector of the beta of the hypothesis, e.g. L
+#'     beta=L betaH. betaH=0 if modelSmall is a model not a restriction matrix.
+#' @param details If larger than 0 some timing details are printed.
+#' @param \dots Additional arguments to print function
+#' @note This functionality is not thoroughly tested and should be used with
+#'     care. Please do report bugs etc.
+#' @author Ulrich Halekoh \email{ulrich.halekoh@@agrsci.dk}, Søren Højsgaard
+#'     \email{sorenh@@math.aau.dk}
+#' 
+#' @seealso \code{\link{getKR}}, \code{\link{lmer}}, \code{\link{vcovAdj}},
+#'     \code{\link{PBmodcomp}}
+#' 
+#' @references Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
+#'     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
+#'     Models - The R Package pbkrtest., Journal of Statistical Software,
+#'     58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+#' 
+#' Kenward, M. G. and Roger, J. H. (1997), \emph{Small Sample Inference for
+#' Fixed Effects from Restricted Maximum Likelihood}, Biometrics 53: 983-997.
+#'
+#' @keywords models inference
+#' @examples
+#' 
+#' (fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+#' ## removing Days
+#' (fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
+#' anova(fmLarge,fmSmall)
+#' KRmodcomp(fmLarge,fmSmall)
+#' 
+#' ## The same test using a restriction matrix
+#' L <- cbind(0,1)
+#' KRmodcomp(fmLarge, L)
+#' 
+#' ## Same example, but with independent intercept and slope effects:
+#' m.large  <- lmer(Reaction ~ Days + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+#' m.small  <- lmer(Reaction ~ 1 + (1|Subject) + (0+Days|Subject), data = sleepstudy)
+#' anova(m.large, m.small)
+#' KRmodcomp(m.large, m.small)
+#' 
+#' 
+
+#' @rdname kr-modcomp
 KRmodcomp <- function(largeModel, smallModel,betaH=0, details=0){
     UseMethod("KRmodcomp")
 }
 
-KRmodcomp.lmerMod<-
-    KRmodcomp.mer<-
-        function(largeModel, smallModel, betaH=0, details=0) {
-  ## 'smallModel' can either be an lmerMod (linear mixed) model or a restriction matrix L.
-  w <- KRmodcomp_init(largeModel, smallModel, matrixOK = TRUE)
-  if (w==-1) {
-    stop('Models have either equal fixed mean stucture or are not nested')
-  } else {
-    if (w==0){
-      ##stop('First given model is submodel of second; exchange the models\n')
-      tmp <- largeModel
-      largeModel <- smallModel
-      smallModel <- tmp
-    }
-  }
 
-  ## Refit large model with REML if necessary
-  if (!(getME(largeModel, "is_REML"))){
-    largeModel <- update(largeModel,.~.,REML=TRUE)
-  }
-
-
-
-  ## All computations are based on 'largeModel' and the restriction matrix 'L'
-  ## -------------------------------------------------------------------------
-  t0    <- proc.time()
-  L     <- .model2restrictionMatrix(largeModel, smallModel)
-
-  PhiA  <- vcovAdj(largeModel, details)
-  stats <- .KR_adjust(PhiA, Phi=vcov(largeModel), L, beta=fixef(largeModel), betaH)
-  stats <- lapply(stats, c) ## To get rid of all sorts of attributes
-  ans   <- .finalizeKR(stats)
-
-  f.small <-
-    if (.is.lmm(smallModel)){
-      .zzz <- formula(smallModel)
-      attributes(.zzz) <- NULL
-      .zzz
+#' @rdname kr-modcomp
+KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
+    ## 'smallModel' can either be an lmerMod (linear mixed) model or a restriction matrix L.
+    w <- KRmodcomp_init(largeModel, smallModel, matrixOK = TRUE)
+    if (w == -1) {
+        stop('Models have either equal fixed mean stucture or are not nested')
     } else {
-      list(L=L, betaH=betaH)
+        if (w == 0){
+            ##stop('First given model is submodel of second; exchange the models\n')
+            tmp <- largeModel
+            largeModel <- smallModel
+            smallModel <- tmp
+        }
     }
-  f.large <- formula(largeModel)
-  attributes(f.large) <- NULL
-
-  ans$f.large <- f.large
-  ans$f.small <- f.small
-  ans$ctime   <- (proc.time()-t0)[1]
-  ans$L       <- L
-  ans
+    
+    ## Refit large model with REML if necessary
+    if (!(getME(largeModel, "is_REML"))){
+        largeModel <- update(largeModel,.~.,REML=TRUE)
+    }
+    
+    ## All computations are based on 'largeModel' and the restriction matrix 'L'
+    ## -------------------------------------------------------------------------
+    t0    <- proc.time()
+    L     <- .model2restrictionMatrix(largeModel, smallModel)
+    
+    PhiA  <- vcovAdj(largeModel, details)
+    stats <- .KR_adjust(PhiA, Phi=vcov(largeModel), L, beta=fixef(largeModel), betaH)
+    stats <- lapply(stats, c) ## To get rid of all sorts of attributes
+    ans   <- .finalizeKR(stats)
+    
+    f.small <-
+        if (.is.lmm(smallModel)){
+            .zzz <- formula(smallModel)
+            attributes(.zzz) <- NULL
+            .zzz
+        } else {
+            list(L=L, betaH=betaH)
+        }
+    f.large <- formula(largeModel)
+    attributes(f.large) <- NULL
+    
+    ans$f.large <- f.large
+    ans$f.small <- f.small
+    ans$ctime   <- (proc.time()-t0)[1]
+    ans$L       <- L
+    ans
 }
 
-.finalizeKR <- function(stats){
+#' @rdname kr-modcomp
+KRmodcomp.mer <- KRmodcomp.lmerMod
 
-  test = list(
-    Ftest      = c(stat=stats$Fstat,     ndf=stats$ndf,  ddf=stats$ddf,  F.scaling=stats$F.scaling,  p.value=stats$p.value),
-    FtestU     = c(stat=stats$FstatU,    ndf=stats$ndf,  ddf=stats$ddf,  F.scaling=NA,               p.value=stats$p.valueU))
-  test  <- as.data.frame(do.call(rbind, test))
-  test$ndf <- as.integer(test$ndf)
-  ans   <- list(test=test, type="F", aux=stats$aux, stats=stats)
-  ## Notice: stats are carried to the output. They are used for get getKR function...
-  class(ans)<-c("KRmodcomp")
-  ans
+
+.finalizeKR <- function(stats){
+    
+    test = list(
+        Ftest      = c(stat=stats$Fstat,     ndf=stats$ndf,  ddf=stats$ddf,  F.scaling=stats$F.scaling,  p.value=stats$p.value),
+        FtestU     = c(stat=stats$FstatU,    ndf=stats$ndf,  ddf=stats$ddf,  F.scaling=NA,               p.value=stats$p.valueU))
+    test  <- as.data.frame(do.call(rbind, test))
+    test$ndf <- as.integer(test$ndf)
+    ans   <- list(test=test, type="F", aux=stats$aux, stats=stats)
+    ## Notice: stats are carried to the output. They are used for get getKR function...
+    class(ans)<-c("KRmodcomp")
+    ans
 }
 
 KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
-
-  PhiA  <- vcovAdj(largeModel, details)
-  stats <- .KR_adjust(PhiA, Phi=vcov(largeModel), LL, beta=fixef(largeModel), betaH)
-  stats <- lapply(stats, c) ## To get rid of all sorts of attributes
-  ans   <- .finalizeKR(stats)
-  ans
+    
+    PhiA  <- vcovAdj(largeModel, details)
+    stats <- .KR_adjust(PhiA, Phi=vcov(largeModel), LL, beta=fixef(largeModel), betaH)
+    stats <- lapply(stats, c) ## To get rid of all sorts of attributes
+    ans   <- .finalizeKR(stats)
+    ans
 }
 
 
@@ -130,7 +216,7 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
 ###orgDef: F.scaling <-  df2 /(E*(df2-2))
 ###altCalc F.scaling<- df2 * .divZero(1-A2/q,df2-2,tol=1e-12)
   ## this does not work because df2-2 can be about 0.1
-  F.scaling<-ifelse( abs(df2-2)<1e-2, 1 , df2*(1-A2/q)/(df2-2))
+  F.scaling <- ifelse( abs(df2 - 2) < 1e-2, 1 , df2 * (1 - A2 / q) / (df2 - 2))
   ##cat(sprintf("KR: rho=%f, df2=%f F.scaling=%f\n", rho, df2, F.scaling))
 
   ## Vector of auxilary values; just for checking etc...
@@ -138,14 +224,14 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
 
 ### The F-statistic; scaled and unscaled
   betaDiff <- cbind( beta - betaH )
-  Wald     <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%PhiA%*%t(L), L%*%betaDiff))
-  WaldU    <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L%*%Phi%*%t(L), L%*%betaDiff))
+  Wald     <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L %*% PhiA %*% t(L), L %*% betaDiff))
+  WaldU    <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L %*% Phi %*% t(L), L %*% betaDiff))
 
   FstatU <- Wald/q
-  pvalU  <- pf(FstatU,df1=q,df2=df2,lower.tail=FALSE)
+  pvalU  <- pf(FstatU, df1=q, df2=df2, lower.tail=FALSE)
 
   Fstat  <- F.scaling * FstatU
-  pval   <- pf(Fstat,df1=q,df2=df2,lower.tail=FALSE)
+  pval   <- pf(Fstat, df1=q, df2=df2, lower.tail=FALSE)
 
   stats<-list(ndf=q, ddf=df2,
               Fstat  = Fstat,  p.value=pval, F.scaling=F.scaling,

@@ -8,16 +8,16 @@
 \alias{summary.KRmodcomp}
 \alias{print.KRmodcomp}
 
-\alias{get_ddf_Lb}
-\alias{get_ddf_Lb.lmerMod}
-\alias{ddf_Lb}
+%\alias{get_ddf_Lb}
+%\alias{get_ddf_Lb.lmerMod}
+%\alias{ddf_Lb}
 
 \alias{KRmodcomp_init}
 \alias{KRmodcomp_init.lmerMod}
 
-\alias{vcovAdj15}
-\alias{vcovAdj15_internal}
-\alias{vcovAdj16}
+%% \alias{vcovAdj15}
+%% \alias{vcovAdj15_internal}
+%% \alias{vcovAdj16}
 \alias{vcovAdj16_internal}
 
 \alias{KRmodcomp_init.mer}

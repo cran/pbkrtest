@@ -6,16 +6,14 @@
     ##orthogonal complement of <W>: <W>orth=<Worth>
     rW    <- rankMatrix(W)
     Worth <- qr.Q(qr(cbind(W)),
-                  complete=TRUE)[,-c(1:rW),drop=FALSE]
+                  complete=TRUE)[,-c(1:rW), drop=FALSE]
     Worth
 }
 
 
-
-
-
-## Old UHH-code below
-## Completely obsolete
+##
+## Old UHH-code below  Completely obsolete
+##
 
 ## .spurAB<-function(A,B){
 ##   sum(A*t.default(B))
