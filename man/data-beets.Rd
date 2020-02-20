@@ -2,10 +2,10 @@
 % Please edit documentation in R/data-beets.R
 \docType{data}
 \name{data-beets}
-\alias{beets}
 \alias{data-beets}
-\title{beets data}
-\format{The format is: chr "beets"}
+\alias{beets}
+\title{Sugar beets data}
+\format{A dataframe with 5 columns and 30 rows.}
 \usage{
 beets
 }
@@ -52,4 +52,3 @@ Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
     58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
 }
 \keyword{datasets}
-

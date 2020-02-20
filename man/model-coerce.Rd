@@ -14,15 +14,7 @@
 \usage{
 model2restrictionMatrix(largeModel, smallModel)
 
-\method{model2restrictionMatrix}{merMod}(largeModel, smallModel)
-
-\method{model2restrictionMatrix}{lm}(largeModel, smallModel)
-
 restrictionMatrix2model(largeModel, LL)
-
-\method{restrictionMatrix2model}{merMod}(largeModel, LL)
-
-\method{restrictionMatrix2model}{lm}(largeModel, LL)
 }
 \arguments{
 \item{largeModel, smallModel}{Model objects of the same "type". Possible types
@@ -36,17 +28,17 @@ linear models)}
     \code{restrictionMatrix2model}: A model object.
 }
 \description{
-Testing a small model under a large model corresponds imposing
-    restrictions on the model matrix of the larger model and these
-    restrictions come in the form of a restriction matrix. These functions
-    converts a model to a restriction matrix and vice versa.
+Testing a small model under a large model corresponds
+    imposing restrictions on the model matrix of the larger model
+    and these restrictions come in the form of a restriction
+    matrix. These functions converts a model to a restriction
+    matrix and vice versa.
 }
 \note{
 That these functions are visible is a recent addition; minor changes
     may occur.
 }
 \examples{
-
 library(pbkrtest)
 data("beets", package = "pbkrtest")
 sug <- lm(sugpct ~ block + sow + harvest, data=beets)
@@ -71,10 +63,6 @@ logLik(mod.s)
 logLik(sug.s)
 
 }
-\author{
-Ulrich Halekoh \email{uhalekoh@health.sdu.dk}, Søren Højsgaard
-    \email{sorenh@math.aau.dk}
-}
 \references{
 Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
@@ -85,5 +73,8 @@ Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
 \code{\link{PBmodcomp}}, \code{\link{PBrefdist}},
     \code{\link{KRmodcomp}}
 }
+\author{
+Ulrich Halekoh \email{uhalekoh@health.sdu.dk}, Søren Højsgaard
+    \email{sorenh@math.aau.dk}
+}
 \keyword{utilities}
-

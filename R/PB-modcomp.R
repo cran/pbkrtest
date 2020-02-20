@@ -40,25 +40,33 @@
 #' 
 #' @aliases PBmodcomp PBmodcomp.lm PBmodcomp.merMod getLRT getLRT.lm
 #'     getLRT.merMod plot.XXmodcomp PBmodcomp.mer getLRT.mer
-#' @param largeModel A model object. Can be a linear mixed effects model or
-#'     generalized linear mixed effects model (as fitted with \code{lmer()} and
-#'     \code{glmer()} function in the \pkg{lme4} package) or a linear normal
-#'     model or a generalized linear model. The \code{largeModel} must be larger
-#'     than \code{smallModel} (see below).
-#' @param smallModel A model of the same type as \code{largeModel} or a
-#'     restriction matrix.
-#' @param nsim The number of simulations to form the reference distribution.
-#' @param ref Vector containing samples from the reference distribution. If
-#'     NULL, this vector will be generated using PBrefdist().
-#' @param seed A seed that will be passed to the simulation of new datasets.
-#' @param cl A vector identifying a cluster; used for calculating the reference
-#'     distribution using several cores. See examples below.
-#' @param details The amount of output produced. Mainly relevant for debugging
-#'     purposes.
-#' @note It can happen that some values of the LRT statistic in the reference
-#'     distribution are negative. When this happens one will see that the number
-#'     of used samples (those where the LRT is positive) are reported (this
-#'     number is smaller than the requested number of samples).
+#' @param largeModel A model object. Can be a linear mixed effects
+#'     model or generalized linear mixed effects model (as fitted with
+#'     \code{lmer()} and \code{glmer()} function in the \pkg{lme4}
+#'     package) or a linear normal model or a generalized linear
+#'     model. The \code{largeModel} must be larger than
+#'     \code{smallModel} (see below).
+#' @param smallModel A model of the same type as \code{largeModel} or
+#'     a restriction matrix.
+#' @param nsim The number of simulations to form the reference
+#'     distribution.
+#' @param ref Vector containing samples from the reference
+#'     distribution. If NULL, this vector will be generated using
+#'     PBrefdist().
+#' @param seed A seed that will be passed to the simulation of new
+#'     datasets.
+#' @param h For sequential computing for bootstrap p-values: The
+#'     number of extreme cases needed to generate before the sampling
+#'     proces stops.
+#' @param cl A vector identifying a cluster; used for calculating the
+#'     reference distribution using several cores. See examples below.
+#' @param details The amount of output produced. Mainly relevant for
+#'     debugging purposes.
+#' @note It can happen that some values of the LRT statistic in the
+#'     reference distribution are negative. When this happens one will
+#'     see that the number of used samples (those where the LRT is
+#'     positive) are reported (this number is smaller than the
+#'     requested number of samples).
 #' 
 #' In theory one can not have a negative value of the LRT statistic but in
 #' practice on can: We speculate that the reason is as follows: We simulate data
@@ -95,14 +103,15 @@
 #' head(beets)
 #' 
 #' ## Linear mixed effects model:
-#' sug   <- lmer(sugpct ~ block + sow + harvest + (1|block:harvest), data=beets, REML=FALSE)
+#' sug   <- lmer(sugpct ~ block + sow + harvest + (1|block:harvest),
+#'               data=beets, REML=FALSE)
 #' sug.h <- update(sug, .~. -harvest)
 #' sug.s <- update(sug, .~. -sow)
 #' 
 #' anova(sug, sug.h)
-#' PBmodcomp(sug, sug.h, nsim=50)
+#' PBmodcomp(sug, sug.h, nsim=50, cl=1)
 #' anova(sug, sug.h)
-#' PBmodcomp(sug, sug.s, nsim=50)
+#' PBmodcomp(sug, sug.s, nsim=50, cl=1)
 #' 
 #' ## Linear normal model:
 #' sug <- lm(sugpct ~ block + sow + harvest, data=beets)
@@ -110,9 +119,9 @@
 #' sug.s <- update(sug, .~. -sow)
 #' 
 #' anova(sug, sug.h)
-#' PBmodcomp(sug, sug.h, nsim=50)
+#' PBmodcomp(sug, sug.h, nsim=50, cl=1)
 #' anova(sug, sug.s)
-#' PBmodcomp(sug, sug.s, nsim=50)
+#' PBmodcomp(sug, sug.s, nsim=50, cl=1)
 #' 
 #' ## Generalized linear model
 #' counts    <- c(18,17,15,20,10,20,25,13,12)
@@ -125,9 +134,9 @@
 #' glm.D93.t <- update(glm.D93, .~. -treatment)
 #' 
 #' anova(glm.D93, glm.D93.o, test="Chisq")
-#' PBmodcomp(glm.D93, glm.D93.o, nsim=50)
+#' PBmodcomp(glm.D93, glm.D93.o, nsim=50, cl=1)
 #' anova(glm.D93, glm.D93.t, test="Chisq")
-#' PBmodcomp(glm.D93, glm.D93.t, nsim=50)
+#' PBmodcomp(glm.D93, glm.D93.t, nsim=50, cl=1)
 #' 
 #' ## Generalized linear mixed model (it takes a while to fit these)
 #' \dontrun{
@@ -135,7 +144,7 @@
 #'               data = cbpp, family = binomial))
 #' (gm2 <- update(gm1, .~.-period))
 #' anova(gm1, gm2)
-#' PBmodcomp(gm1, gm2)
+#' PBmodcomp(gm1, gm2, cl=2)
 #' }
 #' 
 #' 
@@ -144,18 +153,18 @@
 #' ## removing Days
 #' (fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
 #' anova(fmLarge, fmSmall)
-#' PBmodcomp(fmLarge, fmSmall)
+#' PBmodcomp(fmLarge, fmSmall, cl=1)
 #' 
 #' ## The same test using a restriction matrix
 #' L <- cbind(0,1)
-#' PBmodcomp(fmLarge, L)
+#' PBmodcomp(fmLarge, L, cl=1)
 #' 
 #' ## Vanilla
-#' PBmodcomp(beet0, beet_no.harv, nsim=1000)
+#' PBmodcomp(beet0, beet_no.harv, nsim=1000, cl=1)
 #' 
 #' ## Simulate reference distribution separately:
 #' refdist <- PBrefdist(beet0, beet_no.harv, nsim=1000)
-#' PBmodcomp(beet0, beet_no.harv, ref=refdist)
+#' PBmodcomp(beet0, beet_no.harv, ref=refdist, cl=1)
 #' 
 #' ## Do computations with multiple processors:
 #' ## Number of cores:
@@ -178,14 +187,35 @@
 #' @export PBmodcomp
 
 #' @rdname pb-modcomp
+seqPBmodcomp <-
+    function(largeModel, smallModel, h = 20, nsim = 1000, cl=1) {
+        t.start <- proc.time()
+        chunk.size <- 200
+        nchunk <- nsim %/% chunk.size
+        LRTstat <- getLRT(largeModel, smallModel)
+        ref <- NULL
+        for (ii in 1:nchunk) {
+            ref <- c(ref, PBrefdist(largeModel, smallModel, nsim = chunk.size, cl=cl))
+            n.extreme <- sum(ref > LRTstat["tobs"])
+            if (n.extreme >= h)
+                break
+        }
+        ans <- PBmodcomp(largeModel, smallModel, ref = ref)
+        ans$ctime <- (proc.time() - t.start)[3]
+        ans
+    }
+
+
+#' @export
+#' @rdname pb-modcomp
 PBmodcomp <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
   UseMethod("PBmodcomp")
 }
 
+
+#' @export
 #' @rdname pb-modcomp
-PBmodcomp.merMod <-
-PBmodcomp.mer <-
-    function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
+PBmodcomp.merMod <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
         
         ##cat("PBmodcomp.lmerMod\n")
         f.large <- formula(largeModel)
@@ -200,7 +230,8 @@ PBmodcomp.mer <-
         }
         
         if (is.null(ref)){
-            ref <- PBrefdist(largeModel, smallModel, nsim=nsim, seed=seed, cl=cl, details=details)
+            ref <- PBrefdist(largeModel, smallModel, nsim=nsim,
+                             seed=seed, cl=cl, details=details)
         }
         
         ## samples <- attr(ref, "samples")
@@ -217,14 +248,11 @@ PBmodcomp.mer <-
         .padPB( ans, LRTstat, ref, f.large, f.small)
     }
 
-.padPB <- function(ans, LRTstat, ref, f.large, f.small){
-    ans$LRTstat <- LRTstat
-    ans$ref     <- ref
-    ans$f.large <- f.large
-    ans$f.small <- f.small
-    ans
-}
+#' @export
+PBmodcomp.mer <- PBmodcomp.merMod
 
+
+#' @export
 #' @rdname pb-modcomp
 PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
 
@@ -282,6 +310,19 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
   ans
 }
 
+
+
+### dot-functions below here
+
+.padPB <- function(ans, LRTstat, ref, f.large, f.small){
+    ans$LRTstat <- LRTstat
+    ans$ref     <- ref
+    ans$f.large <- f.large
+    ans$f.small <- f.small
+    ans
+}
+
+
 .summarizePB <- function(LRTstat, ref){
 
   tobs <- unname(LRTstat[1])
@@ -335,29 +376,27 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
       p.FF <- NA
 
   ## Fit T/d to F-distribution (1. AND 2. moment)
-  #' EE2   <- EE/ndf
-  #' VV2   <- VV/ndf^2
+  ## EE2   <- EE/ndf
+  ## VV2   <- VV/ndf^2
 
-  #' rho   <- VV2/(2*EE2^2)
-  #' ddf2  <- 4 + (ndf+2)/(rho*ndf-1)
-  #' lam2  <- (ddf/EE2*(ddf-2))
-  #' Fobs2 <- lam2 * tobs/ndf
-  #' if (ddf2>0)
-  #'   p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)
-  #' else
-  #'   p.FF2 <- NA
+  ## rho   <- VV2/(2*EE2^2)
+  ## ddf2  <- 4 + (ndf+2)/(rho*ndf-1)
+  ## lam2  <- (ddf/EE2*(ddf-2))
+  ## Fobs2 <- lam2 * tobs/ndf
+  ## if (ddf2>0)
+  ##   p.FF2 <- 1-pf(Fobs2, df1=ndf, df2=ddf2)
+  ## else
+  ##   p.FF2 <- NA
 
-  #' cat(sprintf("PB: EE=%f, ndf=%f VV=%f, ddf=%f\n", EE, ndf, VV, ddf))
-
-
+  ## cat(sprintf("PB: EE=%f, ndf=%f VV=%f, ddf=%f\n", EE, ndf, VV, ddf))
 
 
-  test = list(
-    PBtest   = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.PB),
-    Gamma    = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.Ga),
-    Bartlett = c(stat=BCstat,  df=ndf, ddf=NA,   p.value=p.BC),
-    F        = c(stat=Fobs,    df=ndf, ddf=ddf,  p.value=p.FF),
-    LRT      = c(stat=tobs,    df=ndf, ddf=NA,   p.value=p.chi)
+    test = list(
+        LRT      = c(stat=tobs,    df=ndf, ddf=NA,   p.value=p.chi),
+        PBtest   = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.PB),
+        Gamma    = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.Ga),
+        Bartlett = c(stat=BCstat,  df=ndf, ddf=NA,   p.value=p.BC),
+        F        = c(stat=Fobs,    df=ndf, ddf=ddf,  p.value=p.FF)
     )
     ##          PBkd     = c(stat=tobs,    df=NA,  ddf=NA,   p.value=p.KD),
 
@@ -408,22 +447,22 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
 
 .PBcommon <- function(x){
 
-    cat(sprintf("Parametric bootstrap test; "))
+    cat(sprintf("Bootstrap test; "))
     if (!is.null((zz<- x$ctime))){
-        cat(sprintf("time: %.2f sec; ", round(zz,2)))
+        cat(sprintf("time: %.2f sec;", round(zz,2)))
     }
     if (!is.null((sam <- x$samples))){
-        cat(sprintf("samples: %d extremes: %d;", sam[1], x$n.extreme))
+        cat(sprintf("samples: %d; extremes: %d;", sam[1], x$n.extreme))
     }
     cat("\n")
-    
-    
+        
     if (!is.null((sam <- x$samples))){
-        if (sam[2]<sam[1]){
+        if (sam[2] < sam[1]){
             cat(sprintf("Requested samples: %d Used samples: %d Extremes: %d\n",
                         sam[1], sam[2], x$n.extreme))
         }
     }
+
     if(!is.null(x$f.large)){
         cat("large : "); print(x$f.large)
         cat("small : "); print(x$f.small)
@@ -432,6 +471,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
 
 
 
+#' @export
 print.PBmodcomp <- function(x, ...){
   .PBcommon(x)
   tab <- x$test
@@ -440,7 +480,8 @@ print.PBmodcomp <- function(x, ...){
 }
 
 
-summary.PBmodcomp <- function(object,...){
+#' @export
+summary.PBmodcomp <- function(object, ...){
   ans <- .summarizePB(object$LRTstat, object$ref)
   ans$f.large <- object$f.large
   ans$f.small <- object$f.small
@@ -448,7 +489,8 @@ summary.PBmodcomp <- function(object,...){
   ans
 }
 
-print.summaryPB <- function(x,...){
+#' @export
+print.summaryPB <- function(x, ...){
   .PBcommon(x)
   ans <- x$test
   printCoefmat(ans, tst.ind=1, na.print='', has.Pvalue=TRUE)
@@ -465,6 +507,7 @@ print.summaryPB <- function(x,...){
 }
 
 
+#' @export
 plot.PBmodcomp <- function(x, ...){
 
   ref <-x$ref
@@ -510,9 +553,47 @@ plot.PBmodcomp <- function(x, ...){
   legend(0.001,upper,legend=as.expression(c(ZLRT,ZF,ZBart,Zgamma)),
          lty=sym.vec,col=sym.vec,lwd=lwd)
 }
+
+#' @export
 as.data.frame.XXmodcomp <- function(x, row.names = NULL, optional = FALSE, ...){
     as.data.frame(do.call(rbind, x[-c(1:3)]))
 }
+
+
+
+
+
+
+## seqPBmodcomp2 <-
+##     function(largeModel, smallModel, h = 20, nsim = 1000, seed=NULL, cl=NULL) {
+##         t.start <- proc.time()
+
+##         simdata=simulate(smallModel, nsim=nsim, seed=seed)
+##         ref <- rep(NA, nsim)
+##         LRTstat <- getLRT(largeModel, smallModel)
+##         t.obs <- LRTstat["tobs"]
+
+##         count <- 0
+##         n.extreme <- 0
+##         for (i in 1:nsim){
+##             count <- i
+##             yyy <- simdata[,i]
+##             sm2  <- refit(smallModel, newresp=yyy)
+##             lg2  <- refit(largeModel, newresp=yyy)
+##             t.sim <- 2 * (logLik(lg2, REML=FALSE) - logLik(sm2, REML=FALSE))
+##             ref[i] <- t.sim
+##             if (t.sim >= t.obs)
+##                 n.extreme <- n.extreme + 1
+##             if (n.extreme >= h)
+##                 break
+##         }
+##         ref <- ref[1:count]
+        
+
+##         ans <- PBmodcomp(largeModel, smallModel, ref = ref)
+##         ans$ctime <- (proc.time() - t.start)[3]
+##         ans
+##     }
 
 
 
