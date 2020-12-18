@@ -4,7 +4,10 @@
 
 #' @importFrom magrittr "%>%"
 #' @export  "%>%"
-
+#'
+#' @importFrom utils head
+#' @importFrom stats coef
+#' 
 #' @importFrom parallel clusterCall clusterExport clusterSetRNGStream
 #'     mclapply detectCores makeCluster
 #'
@@ -19,6 +22,12 @@
 #'     model.matrix pchisq pf pgamma printCoefmat quantile simulate
 #'     terms update update.formula var vcov sigma
 #'
+#' @importFrom broom tidy
+#' @export tidy
+#' 
+#' @importFrom dplyr as_tibble
+
+
 
 .dumfunction_afterimportFrom <- function(){}
 

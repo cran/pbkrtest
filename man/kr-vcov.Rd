@@ -18,8 +18,6 @@
 vcovAdj(object, details = 0)
 
 \method{vcovAdj}{lmerMod}(object, details = 0)
-
-\method{vcovAdj}{mer}(object, details = 0)
 }
 \arguments{
 \item{object}{An \code{lmer} model}
@@ -78,7 +76,7 @@ v3/v1
 Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
     Models - The R Package pbkrtest., Journal of Statistical Software,
-    58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+    58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
 
 Kenward, M. G. and Roger, J. H. (1997), \emph{Small Sample Inference for
 Fixed Effects from Restricted Maximum Likelihood}, Biometrics 53: 983-997.

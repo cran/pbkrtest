@@ -59,7 +59,7 @@
 #' @references Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
 #'     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
 #'     Models - The R Package pbkrtest., Journal of Statistical Software,
-#'     58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+#'     58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
 #'
 #' @keywords models inference
 #' @examples
@@ -121,19 +121,15 @@ PBrefdist <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, det
 }
 
 
-
 #' @rdname pb-refdist
 #' @export
 PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
   t0 <- proc.time()
 
-  get_fun <- .get_refDist_lm
-  ref <- .do_sampling(largeModel, smallModel, nsim, cl, get_fun, details)
+  ref <- do_sampling(largeModel, smallModel, nsim, cl, details)
+  
+  ## ref <- ref[ref > 0]
 
-  ref <- ref[ref>0]
-  ctime <- (proc.time()-t0)[3]
-
-  attr(ref,"ctime") <- ctime
   LRTstat     <- getLRT(largeModel, smallModel)
   attr(ref, "stat")    <- LRTstat
   attr(ref, "samples") <- c(nsim=nsim, npos=sum(ref > 0),
@@ -142,7 +138,7 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, 
 
   if (details>0)
     cat(sprintf("Reference distribution with %i samples; computing time: %5.2f secs. \n",
-                length(ref), ctime))
+                length(ref), attr(ref, "ctime")))
 
   ref
 }
@@ -151,36 +147,79 @@ PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, 
 #' @export
 PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
 
-    t0 <- proc.time()
+    if (inherits(smallModel, "formula"))
+        smallModel  <- update(largeModel, smallModel)
+
+    ## w <- modcomp_init(largeModel, smallModel, matrixOK = TRUE)
+
+    ## if (w == -1) stop('Models have equal mean stucture or are not nested')
+    ## if (w == 0){
+    ##     ## First given model is submodel of second; exchange the models
+    ##     tmp <- largeModel; largeModel <- smallModel; smallModel <- tmp
+    ## }
+
+    if (is.numeric(smallModel) && !is.matrix(smallModel))
+        smallModel <- matrix(smallModel, nrow=1)
+            
+    if (inherits(smallModel, c("Matrix", "matrix"))){
+        formula.small <- smallModel
+        smallModel <- remat2model(largeModel, smallModel, REML=FALSE)
+    } else {
+        formula.small <- formula(smallModel)
+        attributes(formula.small) <- NULL
+    }
+    
     if (getME(smallModel, "is_REML")) smallModel <- update(smallModel, REML=FALSE)
     if (getME(largeModel, "is_REML")) largeModel <- update(largeModel, REML=FALSE)
 
-    get_fun <- .get_refdist_merMod
-    ref <- .do_sampling(largeModel, smallModel, nsim, cl, get_fun, details)
+    t0 <- proc.time()
 
+    ref <- do_sampling(largeModel, smallModel, nsim, cl, details)
+    
     LRTstat     <- getLRT(largeModel, smallModel)
-    ctime <- (proc.time()-t0)[3]
-    attr(ref, "ctime")   <- ctime
+
     attr(ref, "stat")    <- LRTstat
     attr(ref, "samples") <- c(nsim=nsim, npos=sum(ref > 0),
                               n.extreme=sum(ref > LRTstat["tobs"]),
                               pPB=(1 + sum(ref > LRTstat["tobs"])) / (1 + sum(ref > 0)))
+    class(ref) <- "refdist"
     if (details>0)
         cat(sprintf("Reference distribution with %5i samples; computing time: %5.2f secs. \n",
-                    length(ref), ctime))
-
+                    length(ref), attr(ref, "ctime")))
+    
     ref
+}
+
+print.refdist <- function(x, n=6L, ...){
+    cat("values: \n")
+    print(head(x, n=n))
+    cat("attributes: \n")
+    print(attributes(x)[1:4])
+    invisible(x)
 }
 
 
 
-.get_refDist_lm <- function(lg, sm, nsim=20, seed=NULL, simdata=simulate(sm, nsim=nsim, seed=seed)){
+get_refdist <- function(lg){
+    UseMethod("get_refdist")
+}
+
+get_refdist.merMod <- function(lg){
+    .get_refdist_merMod
+}
+
+get_refdist.lm <- function(lg){
+    .get_refdist_lm
+}
+
+.get_refdist_lm <- function(lg, sm, nsim=20, seed=NULL,
+                            simdata=simulate(sm, nsim=nsim, seed=seed)){
     ##simdata <- simulate(sm, nsim, seed=seed)
     ee  <- new.env()
     ee$simdata <- simdata
 
-    ff.lg <- update.formula(formula(lg),simdata[,ii]~.)
-    ff.sm <- update.formula(formula(sm),simdata[,ii]~.)
+    ff.lg <- update.formula(formula(lg), simdata[, ii] ~ .)
+    ff.sm <- update.formula(formula(sm), simdata[, ii] ~ .)
     environment(ff.lg) <- environment(ff.sm) <- ee
 
     cl.lg <- getCall(lg)
@@ -189,6 +228,11 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
     cl.lg$formula <- ff.lg
     cl.sm$formula <- ff.sm
 
+    if (inherits(lg, "glm")){
+        cl.lg$start <- coef(lg)
+        cl.sm$start <- coef(sm)
+    }
+
     ref <- rep.int(NA, nsim)
     for (ii in 1:nsim){
         ref[ii] <- 2 * (logLik(eval(cl.lg)) - logLik(eval(cl.sm)))
@@ -196,7 +240,8 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
     ref
 }
 
-.get_refdist_merMod <- function(lg, sm, nsim=20, seed=NULL, simdata=simulate(sm, nsim=nsim, seed=seed)){
+.get_refdist_merMod <- function(lg, sm, nsim=20, seed=NULL,
+                                simdata=simulate(sm, nsim=nsim, seed=seed)){
                                         #simdata <- simulate(sm, nsim=nsim, seed=seed)
     unname(unlist(lapply(simdata, function(yyy){
         sm2  <- suppressMessages(refit(sm, newresp=yyy))
@@ -206,20 +251,23 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
 }
 
 
-.do_sampling <- function(largeModel, smallModel, nsim, cl, get_fun, details=0){
+
+get_cl <- function(cl){
+
 
     .cat <- function(b, ...) {if (b) cat(...)}
-    dd <- details
-
+    dd <- 2
+    
     if (Sys.info()["sysname"] == "Windows"){
         ##cat("We are on windows; setting cl=1\n")
         cl <- 1
     }
-
+    
     if (!is.null(cl)){
         if (inherits(cl, "cluster") || (is.numeric(cl) && length(cl) == 1 && cl >= 1)){
             .cat(dd>3, "valid 'cl' specified in call \n")
-        } else stop("invalid 'cl' specified in call \n")
+        } else
+            stop("invalid 'cl' specified in call \n")
     } else {
         .cat(dd>3, "trying to retrieve 'cl' from options('pb.cl') ... \n")
         cl <- getOption("pb.cl")
@@ -228,7 +276,7 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
                 stop("option 'cl' set but is not a list of clusters\n")
             .cat(dd>3,"  got 'cl' from options; length(cl) = ", length(cl), "\n")
         }
-
+        
         if (is.null(cl)){
             .cat(dd>3, "trying to retrieve 'cl' from options('mc.cores')... \n")
             cl <- getOption("mc.cores")
@@ -236,17 +284,36 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
                 .cat(dd>3,"  got 'cl' from options(mc.cores); cl = ", cl, "\n")
         }
     }
-
+    
     if (is.null(cl)){
         .cat(dd > 3, "cl can not be retrieved anywhere; setting cl=1\n")
         cl <- 1
     }
 
+    cl
+    
+}
+
+do_sampling <- function(largeModel, smallModel, nsim, cl, details=0){
+
+    t0  <- proc.time()
+    .cat <- function(b, ...) {if (b) cat(...)}
+    dd <- details
+
+    get_fun <- get_refdist(largeModel)
+    
+    cl <- get_cl(cl)
+        
     if (is.numeric(cl)){
         if (!(length(cl) == 1 && cl >= 1)) stop("Invalid numeric cl\n")
+
         .cat(dd>3, "doing mclapply, cl = ", cl, "\n")
         nsim.cl <- nsim %/% cl
-        ref <- unlist(mclapply(1:cl, function(i) {get_fun(largeModel, smallModel, nsim=nsim.cl)}, mc.cores=cl))
+        ref <- unlist(mclapply(1:cl,
+                               function(i) {
+                                   get_fun(largeModel, smallModel, nsim=nsim.cl)},
+                               mc.cores=cl))
+
     } else
         if (inherits(cl, "cluster")){
             .cat(dd>3,"doing clusterCall, nclusters = ", length(cl), "\n")
@@ -255,6 +322,10 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
             ref <- unlist(clusterCall(cl, fun=get_fun,
                                       largeModel, smallModel, nsim=nsim.cl))
         }
-    else
-        stop("Invalid 'cl'\n")
+    else stop("Invalid 'cl'\n")
+
+    attr(ref, "cl")  <- cl
+    attr(ref, "ctime") <- (proc.time() - t0)[3]
+    ref
+
 }

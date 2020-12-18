@@ -1,6 +1,6 @@
 ##########################################################
 ###
-### Bartlett corrected LRT
+### 
 ###
 ##########################################################
 
@@ -11,11 +11,14 @@
 #'
 #' @name pb-modcomp
 #' 
-#' @details The model \code{object} must be fitted with maximum likelihood
-#'     (i.e. with \code{REML=FALSE}). If the object is fitted with restricted
-#'     maximum likelihood (i.e. with \code{REML=TRUE}) then the model is
-#'     refitted with \code{REML=FALSE} before the p-values are calculated. Put
-#'     differently, the user needs not worry about this issue.
+#' @details
+#'
+#' The model \code{object} must be fitted with maximum likelihood
+#'     (i.e. with \code{REML=FALSE}). If the object is fitted with
+#'     restricted maximum likelihood (i.e. with \code{REML=TRUE}) then
+#'     the model is refitted with \code{REML=FALSE} before the
+#'     p-values are calculated. Put differently, the user needs not
+#'     worry about this issue.
 #' 
 #' Under the fitted hypothesis (i.e. under the fitted small model) \code{nsim}
 #' samples of the likelihood ratio test statistic (LRT) are generetated.
@@ -95,12 +98,14 @@
 #' @references Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
 #'     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
 #'     Models - The R Package pbkrtest., Journal of Statistical Software,
-#'     58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+#'     58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
 #' @keywords models inference
 #' @examples
 #' 
 #' data(beets, package="pbkrtest")
 #' head(beets)
+#' 
+#' NSIM <- 50 ## Simulations in parametric bootstrap
 #' 
 #' ## Linear mixed effects model:
 #' sug   <- lmer(sugpct ~ block + sow + harvest + (1|block:harvest),
@@ -109,9 +114,9 @@
 #' sug.s <- update(sug, .~. -sow)
 #' 
 #' anova(sug, sug.h)
-#' PBmodcomp(sug, sug.h, nsim=50, cl=1)
+#' PBmodcomp(sug, sug.h, nsim=NSIM, cl=1)
 #' anova(sug, sug.h)
-#' PBmodcomp(sug, sug.s, nsim=50, cl=1)
+#' PBmodcomp(sug, sug.s, nsim=NSIM, cl=1)
 #' 
 #' ## Linear normal model:
 #' sug <- lm(sugpct ~ block + sow + harvest, data=beets)
@@ -119,14 +124,14 @@
 #' sug.s <- update(sug, .~. -sow)
 #' 
 #' anova(sug, sug.h)
-#' PBmodcomp(sug, sug.h, nsim=50, cl=1)
+#' PBmodcomp(sug, sug.h, nsim=NSIM, cl=1)
 #' anova(sug, sug.s)
-#' PBmodcomp(sug, sug.s, nsim=50, cl=1)
+#' PBmodcomp(sug, sug.s, nsim=NSIM, cl=1)
 #' 
 #' ## Generalized linear model
-#' counts    <- c(18,17,15,20,10,20,25,13,12)
-#' outcome   <- gl(3,1,9)
-#' treatment <- gl(3,3)
+#' counts    <- c(18, 17, 15, 20, 10, 20, 25, 13, 12)
+#' outcome   <- gl(3, 1, 9)
+#' treatment <- gl(3, 3)
 #' d.AD      <- data.frame(treatment, outcome, counts)
 #' head(d.AD)
 #' glm.D93   <- glm(counts ~ outcome + treatment, family = poisson())
@@ -134,9 +139,9 @@
 #' glm.D93.t <- update(glm.D93, .~. -treatment)
 #' 
 #' anova(glm.D93, glm.D93.o, test="Chisq")
-#' PBmodcomp(glm.D93, glm.D93.o, nsim=50, cl=1)
+#' PBmodcomp(glm.D93, glm.D93.o, nsim=NSIM, cl=1)
 #' anova(glm.D93, glm.D93.t, test="Chisq")
-#' PBmodcomp(glm.D93, glm.D93.t, nsim=50, cl=1)
+#' PBmodcomp(glm.D93, glm.D93.t, nsim=NSIM, cl=1)
 #' 
 #' ## Generalized linear mixed model (it takes a while to fit these)
 #' \dontrun{
@@ -160,7 +165,7 @@
 #' PBmodcomp(fmLarge, L, cl=1)
 #' 
 #' ## Vanilla
-#' PBmodcomp(beet0, beet_no.harv, nsim=1000, cl=1)
+#' PBmodcomp(beet0, beet_no.harv, nsim=NSIM, cl=1)
 #' 
 #' ## Simulate reference distribution separately:
 #' refdist <- PBrefdist(beet0, beet_no.harv, nsim=1000)
@@ -176,34 +181,32 @@
 #' PBmodcomp(beet0, beet_no.harv, cl=cl)
 #' 
 #' ## Or in two steps:
-#' refdist <- PBrefdist(beet0, beet_no.harv, nsim=1000, cl=cl)
+#' refdist <- PBrefdist(beet0, beet_no.harv, nsim=NSIM, cl=cl)
 #' PBmodcomp(beet0, beet_no.harv, ref=refdist)
 #' 
 #' ## It is recommended to stop the clusters before quitting R:
 #' stopCluster(cl)
 #' }
 #' 
+#' ## Linear and generalized linear models:
+#' 
+#' m11 <- lm(dist ~ speed + I(speed^2), data=cars)
+#' m10 <- update(m11, ~.-I(speed^2))
+#' anova(m11, m10)
+#' 
+#' PBmodcomp(m11, m10, cl=1, nsim=NSIM)
+#' PBmodcomp(m11, ~.-I(speed^2), cl=1, nsim=NSIM)
+#' PBmodcomp(m11, c(0, 0, 1), cl=1, nsim=NSIM)
+#' 
+#' m21 <- glm(dist ~ speed + I(speed^2), family=Gamma("identity"), data=cars)
+#' m20 <- update(m21, ~.-I(speed^2))
+#' anova(m21, m20, test="Chisq")
+#' 
+#' PBmodcomp(m21, m20, cl=1, nsim=NSIM)
+#' PBmodcomp(m21, ~.-I(speed^2), cl=1, nsim=NSIM)
+#' PBmodcomp(m21, c(0, 0, 1), cl=1, nsim=NSIM)
 #' 
 #' @export PBmodcomp
-
-#' @rdname pb-modcomp
-seqPBmodcomp <-
-    function(largeModel, smallModel, h = 20, nsim = 1000, cl=1) {
-        t.start <- proc.time()
-        chunk.size <- 200
-        nchunk <- nsim %/% chunk.size
-        LRTstat <- getLRT(largeModel, smallModel)
-        ref <- NULL
-        for (ii in 1:nchunk) {
-            ref <- c(ref, PBrefdist(largeModel, smallModel, nsim = chunk.size, cl=cl))
-            n.extreme <- sum(ref > LRTstat["tobs"])
-            if (n.extreme >= h)
-                break
-        }
-        ans <- PBmodcomp(largeModel, smallModel, ref = ref)
-        ans$ctime <- (proc.time() - t.start)[3]
-        ans
-    }
 
 
 #' @export
@@ -216,71 +219,134 @@ PBmodcomp <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl
 #' @export
 #' @rdname pb-modcomp
 PBmodcomp.merMod <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
-        
-        ##cat("PBmodcomp.lmerMod\n")
-        f.large <- formula(largeModel)
-        attributes(f.large) <- NULL
-        
-        if (inherits(smallModel, c("Matrix", "matrix"))){
-            f.small <- smallModel
-            smallModel <- restrictionMatrix2model(largeModel, smallModel)
-        } else {
-            f.small <- formula(smallModel)
-            attributes(f.small) <- NULL
-        }
-        
-        if (is.null(ref)){
-            ref <- PBrefdist(largeModel, smallModel, nsim=nsim,
-                             seed=seed, cl=cl, details=details)
-        }
-        
-        ## samples <- attr(ref, "samples")
-        ## if (!is.null(samples)){
-        ##     nsim <- samples['nsim']
-        ##     npos <- samples['npos']
-        ## } else {
-        ##     nsim <- length(ref)
-        ##     npos <- sum(ref>0)
-        ## }
-        
-        LRTstat     <- getLRT(largeModel, smallModel)
-        ans         <- .finalizePB(LRTstat, ref)
-        .padPB( ans, LRTstat, ref, f.large, f.small)
+
+
+    if (inherits(smallModel, "formula"))
+        smallModel  <- update(largeModel, smallModel)
+
+    ## w <- modcomp_init(largeModel, smallModel, matrixOK = TRUE)
+    ## ss <<- smallModel
+    ## ll <<- largeModel
+
+    ## if (w == -1) stop('Models have equal mean stucture or are not nested')
+
+    ## if (w == 0){
+    ##     ## First given model is submodel of second; exchange the models
+    ##     tmp <- largeModel;
+    ##     largeModel <- smallModel;
+    ##     smallModel <- tmp
+    ## }
+
+    if (is.numeric(smallModel) && !is.matrix(smallModel))
+        smallModel <- matrix(smallModel, nrow=1)
+            
+    if (inherits(smallModel, c("Matrix", "matrix"))){
+        formula.small <- smallModel
+        smallModel <- remat2model(largeModel, smallModel, REML=FALSE)
+    } else {
+        formula.small <- formula(smallModel)
+        attributes(formula.small) <- NULL
     }
 
-#' @export
-PBmodcomp.mer <- PBmodcomp.merMod
+    ##cat("PBmodcomp.lmerMod\n")
+    formula.large <- formula(largeModel)
+    attributes(formula.large) <- NULL
+    
+    ## All computations are based on 'largeModel' and 'smallModel'
+    ## -----------------------------------------------------------
+    
+    if (is.null(ref)){
+        ref <- PBrefdist(largeModel, smallModel, nsim=nsim,
+                         seed=seed, cl=cl, details=details)
+    }
+    
+    LRTstat     <- getLRT(largeModel, smallModel)
+    ans         <- .finalizePB(LRTstat, ref)
+    .padPB(ans, LRTstat, ref, formula.large, formula.small)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## #' @export
+## PBmodcomp.mer <- PBmodcomp.merMod
 
 
 #' @export
 #' @rdname pb-modcomp
 PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL, cl=NULL, details=0){
 
-  ok.fam <- c("binomial", "gaussian", "Gamma", "inverse.gaussian", "poisson")
-  f.large <- formula(largeModel)
-  attributes(f.large) <- NULL
+    ok.fam <- c("binomial", "gaussian", "Gamma", "inverse.gaussian", "poisson")
 
-  if (inherits(smallModel, c("Matrix", "matrix"))){
-    f.small <- smallModel
-    smallModel <- restrictionMatrix2model(largeModel, smallModel)
-  } else {
-    f.small <- formula(smallModel)
-    attributes(f.small) <- NULL
-  }
+    if (inherits(smallModel, "formula"))
+        smallModel  <- update(largeModel, smallModel)
 
-  if (!all.equal((fam.l <- family(largeModel)), (fam.s <- family(smallModel))))
-    stop("Models do not have identical identical family\n")
-  if (!(fam.l$family %in% ok.fam)){
-    stop(sprintf("family must be of type %s", toString(ok.fam)))
-  }
+    if (is.numeric(smallModel) && !is.matrix(smallModel))
+        smallModel <- matrix(smallModel, nrow=1)
+    
+    formula.large <- formula(largeModel)
+    attributes(formula.large) <- NULL
+    
+    if (inherits(smallModel, c("Matrix", "matrix"))){
+        formula.small <- smallModel
+        smallModel <- remat2model(largeModel, smallModel)
+    } else {
+        formula.small <- formula(smallModel)
+        attributes(formula.small) <- NULL
+    }
 
-  if (is.null(ref)){
-    ref <- PBrefdist(largeModel, smallModel, nsim=nsim, seed=seed, cl=cl, details=details)
-  }
+    ## ss <<- smallModel
+    ## print(smallModel)
+    if (!all.equal((fam.l <- family(largeModel)), (fam.s <- family(smallModel))))
+        stop("Models do not have identical identical family\n")
 
-  LRTstat     <- getLRT(largeModel, smallModel)
-  ans         <- .finalizePB(LRTstat, ref)
-    .padPB( ans, LRTstat, ref, f.large, f.small)    
+    if (!(fam.l$family %in% ok.fam))
+        stop(sprintf("family must be of type %s", toString(ok.fam)))
+        
+    if (is.null(ref)){
+        ref <- PBrefdist(largeModel, smallModel, nsim=nsim, seed=seed, cl=cl, details=details)
+    }
+    
+    LRTstat     <- getLRT(largeModel, smallModel)
+    ans         <- .finalizePB(LRTstat, ref)
+    .padPB( ans, LRTstat, ref, formula.large, formula.small)    
 }
 
 .finalizePB <- function(LRTstat, ref){
@@ -312,13 +378,36 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
 
 
 
+
+#' @rdname pb-modcomp
+seqPBmodcomp <-
+    function(largeModel, smallModel, h = 20, nsim = 1000, cl=1) {
+        t.start <- proc.time()
+        chunk.size <- 200
+        nchunk <- nsim %/% chunk.size
+        LRTstat <- getLRT(largeModel, smallModel)
+        ref <- NULL
+        for (ii in 1:nchunk) {
+            ref <- c(ref, PBrefdist(largeModel, smallModel, nsim = chunk.size, cl=cl))
+            n.extreme <- sum(ref > LRTstat["tobs"])
+            if (n.extreme >= h)
+                break
+        }
+        ans <- PBmodcomp(largeModel, smallModel, ref = ref)
+        ans$ctime <- (proc.time() - t.start)[3]
+        ans
+    }
+
+
+
+
 ### dot-functions below here
 
-.padPB <- function(ans, LRTstat, ref, f.large, f.small){
+.padPB <- function(ans, LRTstat, ref, formula.large, formula.small){
     ans$LRTstat <- LRTstat
     ans$ref     <- ref
-    ans$f.large <- f.large
-    ans$f.small <- f.small
+    ans$formula.large <- formula.large
+    ans$formula.small <- formula.small
     ans
 }
 
@@ -328,50 +417,49 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
   tobs <- unname(LRTstat[1])
   ndf  <- unname(LRTstat[2])
 
-  refpos   <- ref[ref>0]
+  refpos   <- ref[ref > 0]
   nsim <- length(ref)
   npos <- length(refpos)
-
 
   EE      <- mean(refpos)
   VV      <- var(refpos)
 
   ##cat(sprintf("EE=%f VV=%f\n", EE, VV))
-  p.chi <- 1-pchisq(tobs, df=ndf)
+  p.chi <- 1 - pchisq(tobs, df=ndf)
 
   ## Direct computation of tail probability
   n.extreme <- sum(tobs < refpos)
   ##p.PB  <- n.extreme / npos
-  p.PB  <- (1+n.extreme) / (1+npos)
+  p.PB  <- (1 + n.extreme) / (1 + npos)
 
-  p.PB.all  <- (1+n.extreme) / (1+nsim)
+  p.PB.all  <- (1 + n.extreme) / (1 + nsim)
 
 
-  se <- round(sqrt(p.PB*(1-p.PB)/npos),4)
-  ci <- round(c(-1.96, 1.96)*se + p.PB,4)
+  se <- round(sqrt(p.PB * (1 - p.PB) / npos), 4)
+  ci <- round(c(-1.96, 1.96) * se + p.PB, 4)
 
   ## Kernel density estimate
   ##dd <- density(ref)
   ##p.KD <- sum(dd$y[dd$x>=tobs])/sum(dd$y)
 
   ## Bartlett correction - X2 distribution
-  BCstat  <- ndf * tobs/EE
+  BCstat  <- ndf * tobs / EE
   ##cat(sprintf("BCval=%f\n", ndf/EE))
-  p.BC    <- 1-pchisq(BCstat,df=ndf)
+  p.BC    <- 1 - pchisq(BCstat,df=ndf)
 
   ## Fit to gamma distribution
-  scale   <- VV/EE
-  shape   <- EE^2/VV
-  p.Ga    <- 1-pgamma(tobs, shape=shape, scale=scale)
+  scale   <- VV / EE
+  shape   <- EE^2 / VV
+  p.Ga    <- 1 - pgamma(tobs, shape=shape, scale=scale)
 
   ## Fit T/d to F-distribution (1. moment)
 
   ## FIXME: Think the formula is 2*EE/(EE-1)
   ##ddf  <- 2*EE/(EE-ndf)
-  ddf  <- 2*EE/(EE-1)
+  ddf  <- 2 * EE / (EE - 1)
   Fobs <- tobs/ndf
-  if (ddf>0)
-      p.FF <- 1-pf(Fobs, df1=ndf, df2=ddf)
+  if (ddf > 0)
+      p.FF <- 1 - pf(Fobs, df1=ndf, df2=ddf)
   else
       p.FF <- NA
 
@@ -452,7 +540,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
         cat(sprintf("time: %.2f sec;", round(zz,2)))
     }
     if (!is.null((sam <- x$samples))){
-        cat(sprintf("samples: %d; extremes: %d;", sam[1], x$n.extreme))
+        cat(sprintf(" samples: %d; extremes: %d;", sam[1], x$n.extreme))
     }
     cat("\n")
         
@@ -463,10 +551,16 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
         }
     }
 
-    if(!is.null(x$f.large)){
-        cat("large : "); print(x$f.large)
-        cat("small : "); print(x$f.small)
+    if (!is.null(x$formula.large)){
+        cat("large : "); print(x$formula.large)
     }
+    
+    if (!is.null(x$formula.small)){
+        if (inherits(x$formula.small, "formula")) cat("small : ")
+        else if (inherits(x$formula.small, "matrix")) cat("small : \n"); 
+        print(x$formula.small)
+    }
+    
 }
 
 
@@ -483,8 +577,8 @@ print.PBmodcomp <- function(x, ...){
 #' @export
 summary.PBmodcomp <- function(object, ...){
   ans <- .summarizePB(object$LRTstat, object$ref)
-  ans$f.large <- object$f.large
-  ans$f.small <- object$f.small
+  ans$formula.large <- object$formula.large
+  ans$formula.small <- object$formula.small
   class(ans) <- "summaryPB"
   ans
 }
@@ -518,27 +612,27 @@ plot.PBmodcomp <- function(x, ...){
 
   EE   <- mean(ref)
   VV   <- var(ref)
-  sc   <- var(ref)/mean(ref)
-  sh   <- mean(ref)^2/var(ref)
-  sc   <- VV/EE
-  sh   <- EE^2/VV
-  B    <- ndf/EE # if ref is the null distr, so should A*ref follow a chisq(df=ndf) distribution
+  sc   <- var(ref) / mean(ref)
+  sh   <- mean(ref)^2 / var(ref)
+  sc   <- VV / EE
+  sh   <- EE^2 / VV
+  B    <- ndf / EE # if ref is the null distr, so should A*ref follow a chisq(df=ndf) distribution
 
   upper <- 0.20
   #tail.prob <- c(0.0001, 0.001, 0.01, 0.05, 0.10, 0.20, 0.5)
   tail.prob <-seq(0.001, upper, length.out = 1111)
-  PBquant   <- quantile(ref,1-tail.prob) ## tail prob for PB dist
+  PBquant   <- quantile(ref, 1 - tail.prob) ## tail prob for PB dist
 
-  pLR       <- pchisq(PBquant,df=ndf,           lower.tail=FALSE)
-  pF        <- pf(PBquant/ndf,df1=ndf,df2=ddf,  lower.tail=FALSE)
-  pGamma    <- pgamma(PBquant,scale=sc,shape=sh,lower.tail=FALSE)
-  pBart     <- pchisq(B*PBquant,df=ndf,         lower.tail=FALSE)
+  pLR       <- pchisq(PBquant, df=ndf,             lower.tail=FALSE)
+  pF        <- pf(PBquant / ndf, df1=ndf, df2=ddf, lower.tail=FALSE)
+  pGamma    <- pgamma(PBquant, scale=sc, shape=sh, lower.tail=FALSE)
+  pBart     <- pchisq(B * PBquant, df=ndf,         lower.tail=FALSE)
 
   sym.vec <- c(2,4,5,6)
   lwd     <- 2
   plot(pLR~tail.prob,type='l', lwd=lwd, #log="xy",
-       xlab='Nominal p-value',ylab='True p-value',
-       xlim=c(1e-3, upper),ylim=c(1e-3, upper),
+       xlab='Nominal p-value', ylab='True p-value',
+       xlim=c(1e-3, upper), ylim=c(1e-3, upper),
        col=sym.vec[1], lty=sym.vec[1])
   lines(pF~tail.prob,lwd=lwd,     col=sym.vec[2], lty=sym.vec[2])
   lines(pBart~tail.prob,lwd=lwd,  col=sym.vec[3], lty=sym.vec[3])
@@ -550,7 +644,7 @@ plot.PBmodcomp <- function(x, ...){
   ZLRT   <-bquote(paste(chi[.(ndf)]^2))
   ZBart  <-bquote(paste("Bartlett scaled ", chi[.(ndf)]^2))
 
-  legend(0.001,upper,legend=as.expression(c(ZLRT,ZF,ZBart,Zgamma)),
+  legend(0.001,upper,legend=as.expression(c(ZLRT, ZF, ZBart, Zgamma)),
          lty=sym.vec,col=sym.vec,lwd=lwd)
 }
 
@@ -623,6 +717,15 @@ as.data.frame.XXmodcomp <- function(x, row.names = NULL, optional = FALSE, ...){
 ## }
 
 
+        
+        ## samples <- attr(ref, "samples")
+        ## if (!is.null(samples)){
+        ##     nsim <- samples['nsim']
+        ##     npos <- samples['npos']
+        ## } else {
+        ##     nsim <- length(ref)
+        ##     npos <- sum(ref>0)
+        ## }
 
 
 ##   rho   <- VV/(2*EE^2)

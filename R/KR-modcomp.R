@@ -55,7 +55,7 @@
 #' @references Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
 #'     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
 #'     Models - The R Package pbkrtest., Journal of Statistical Software,
-#'     58(10), 1-30., \url{http://www.jstatsoft.org/v59/i09/}
+#'     58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
 #' 
 #' Kenward, M. G. and Roger, J. H. (1997), \emph{Small Sample Inference for
 #' Fixed Effects from Restricted Maximum Likelihood}, Biometrics 53: 983-997.
@@ -83,7 +83,7 @@
 
 #' @export
 #' @rdname kr-modcomp
-KRmodcomp <- function(largeModel, smallModel,betaH=0, details=0){
+KRmodcomp <- function(largeModel, smallModel, betaH=0, details=0){
     UseMethod("KRmodcomp")
 }
 
@@ -91,35 +91,37 @@ KRmodcomp <- function(largeModel, smallModel,betaH=0, details=0){
 #' @export
 #' @rdname kr-modcomp
 KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
-    ## 'smallModel' can either be an lmerMod (linear mixed) model or a restriction matrix L.
-    w <- KRmodcomp_init(largeModel, smallModel, matrixOK = TRUE)
-    if (w == -1) {
-        stop('Models have either equal fixed mean stucture or are not nested')
-    } else {
-        if (w == 0){
-            ##stop('First given model is submodel of second; exchange the models\n')
-            tmp <- largeModel
-            largeModel <- smallModel
-            smallModel <- tmp
-        }
+
+    if (inherits(smallModel, "formula"))
+        smallModel  <- update(largeModel, smallModel)
+            
+    w <- modcomp_init(largeModel, smallModel, matrixOK = TRUE)
+
+    if (w == -1) stop('Models have equal mean stucture or are not nested')
+    if (w == 0){
+        ## First given model is submodel of second; exchange the models
+        tmp <- largeModel; largeModel <- smallModel; smallModel <- tmp
     }
     
     ## Refit large model with REML if necessary
     if (!(getME(largeModel, "is_REML"))){
-        largeModel <- update(largeModel,.~.,REML=TRUE)
+        largeModel <- update(largeModel, .~., REML=TRUE)
     }
+
+    
     
     ## All computations are based on 'largeModel' and the restriction matrix 'L'
     ## -------------------------------------------------------------------------
     t0    <- proc.time()
-    L     <- .model2restrictionMatrix(largeModel, smallModel)
+    L     <- model2remat(largeModel, smallModel)
     
     PhiA  <- vcovAdj(largeModel, details)
     stats <- .KR_adjust(PhiA, Phi=vcov(largeModel), L, beta=fixef(largeModel), betaH)
     stats <- lapply(stats, c) ## To get rid of all sorts of attributes
-    ans   <- .finalizeKR(stats)
+
+    out   <- .finalizeKR(stats)
     
-    f.small <-
+    formula.small <-
         if (.is.lmm(smallModel)){
             .zzz <- formula(smallModel)
             attributes(.zzz) <- NULL
@@ -127,18 +129,18 @@ KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
         } else {
             list(L=L, betaH=betaH)
         }
-    f.large <- formula(largeModel)
-    attributes(f.large) <- NULL
+    formula.large <- formula(largeModel)
+    attributes(formula.large) <- NULL
     
-    ans$f.large <- f.large
-    ans$f.small <- f.small
-    ans$ctime   <- (proc.time()-t0)[1]
-    ans$L       <- L
-    ans
+    out$formula.large <- formula.large
+    out$formula.small <- formula.small
+    out$ctime   <- (proc.time() - t0)[3]
+    out$L       <- L
+    out
 }
 
-#' @rdname kr-modcomp
-KRmodcomp.mer <- KRmodcomp.lmerMod
+## #' @rdname kr-modcomp
+## KRmodcomp.mer <- KRmodcomp.lmerMod
 
 
 .finalizeKR <- function(stats){
@@ -148,21 +150,21 @@ KRmodcomp.mer <- KRmodcomp.lmerMod
         FtestU     = c(stat=stats$FstatU,    ndf=stats$ndf,  ddf=stats$ddf,  F.scaling=NA,               p.value=stats$p.valueU))
     test  <- as.data.frame(do.call(rbind, test))
     test$ndf <- as.integer(test$ndf)
-    ans   <- list(test=test, type="F", aux=stats$aux, stats=stats)
+    out   <- list(test=test, type="F", aux=stats$aux, stats=stats)
     ## Notice: stats are carried to the output. They are used for get getKR function...
-    class(ans)<-c("KRmodcomp")
-    ans
+    class(out) <- c("KRmodcomp")
+    out
 }
+
 
 KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
     
     PhiA  <- vcovAdj(largeModel, details)
     stats <- .KR_adjust(PhiA, Phi=vcov(largeModel), LL, beta=fixef(largeModel), betaH)
     stats <- lapply(stats, c) ## To get rid of all sorts of attributes
-    ans   <- .finalizeKR(stats)
-    ans
+    out   <- .finalizeKR(stats)
+    out
 }
-
 
 ## --------------------------------------------------------------------
 ## This is the function that calculates the Kenward-Roger approximation
@@ -244,76 +246,69 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 .KRcommon <- function(x){
-  cat(sprintf("F-test with Kenward-Roger approximation; time: %.2f sec\n",
-              x$ctime))
   cat("large : ")
-  print(x$f.large)
+  print(x$formula.large)
 
-  if (inherits(x$f.small,"call")){
+  if (inherits(x$formula.small, "call")){
     cat("small : ")
-    print(x$f.small)
+    print(x$formula.small)
   } else {
-    formSmall <- x$f.small
-    cat("small : L beta = L betaH \n")
-    cat('L=\n')
-    print(formSmall$L)
-    cat('betaH=\n')
-    print(formSmall$betaH)
-  }
+    formSmall <- x$formula.small
 
+    cat("L = \n")
+    print(formSmall$L)
+    if (!all(formSmall$betaH == 0)){
+        cat('betaH=\n')
+        print(formSmall$betaH)
+    }
+  }
 }
 
 #' @export
 print.KRmodcomp <- function(x, ...){
 
-  .KRcommon(x)
-  FF.thresh <- 0.2
-  F.scale <- x$aux['F.scaling']
-  tab <- x$test
+    .KRcommon(x)
+    FF.thresh <- 0.2
+    F.scale <- x$aux['F.scaling']
+    tab <- x$test
 
-  if (max(F.scale)>FF.thresh){
-    printCoefmat(tab[1,,drop=FALSE], tst.ind=c(1,2,3), na.print='', has.Pvalue=TRUE)
-  } else {
-    printCoefmat(tab[2,,drop=FALSE], tst.ind=c(1,2,3), na.print='', has.Pvalue=TRUE)
-  }
-  return(invisible(x))
+## ttt <<- tab
+    
+    if (max(F.scale) > FF.thresh) i <- 1 else i <- 2
+    printCoefmat(tab[i,, drop=FALSE], tst.ind=c(1,2,3), na.print='', has.Pvalue=TRUE)
+    
+    invisible(x)
 }
 
 
 #' @export
 summary.KRmodcomp <- function(object, ...){
 
-  .KRcommon(object)
-  FF.thresh <- 0.2
-  F.scale <- object$aux['F.scaling']
-  tab <- object$test
-
-  printCoefmat(tab, tst.ind=c(1,2,3), na.print='', has.Pvalue=TRUE)
-
-  if (F.scale<0.2 & F.scale>0) {
-    cat('Note: The scaling factor for the F-statistic is smaller than 0.2 \n')
-    cat('The Unscaled statistic might be more reliable \n ')
-  } else {
-    if (F.scale<=0){
-      cat('Note: The scaling factor for the F-statistic is negative \n')
-      cat('Use the Unscaled statistic instead. \n ')
+    cat(sprintf("F-test with Kenward-Roger approximation; time: %.2f sec\n",
+                object$ctime))
+    
+    .KRcommon(object)
+    FF.thresh <- 0.2
+    
+    F.scale <- object$aux['F.scaling']
+    tab <- object$test
+    
+    printCoefmat(tab, tst.ind=c(1,2,3), na.print='', has.Pvalue=TRUE)
+    
+    if (F.scale < FF.thresh & F.scale > 0) {
+        cat('Note: The scaling factor for the F-statistic is smaller than 0.2 \n')
+        cat('The Unscaled statistic might be more reliable \n ')
+    } else {
+        if (F.scale <=0 ){
+            cat('Note: The scaling factor for the F-statistic is negative \n')
+            cat('Use the Unscaled statistic instead. \n ')
+        }
     }
-  }
 }
+
+
+
 
 
 
