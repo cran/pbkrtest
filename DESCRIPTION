@@ -1,5 +1,5 @@
 Package: pbkrtest
-Version: 0.5-0.1
+Version: 0.5.1
 Title: Parametric Bootstrap, Kenward-Roger and Satterthwaite Based
         Methods for Test in Mixed Models
 Authors@R: c(
@@ -32,8 +32,8 @@ RoxygenNote: 7.1.1
 LazyData: true
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-12-18 00:48:26 UTC; sorenh
+Packaged: 2021-03-09 07:41:11 UTC; sorenh
 Author: Ulrich Halekoh [aut, cph],
   Søren Højsgaard [aut, cre, cph]
 Repository: CRAN
-Date/Publication: 2020-12-18 07:30:09 UTC
+Date/Publication: 2021-03-09 09:50:08 UTC

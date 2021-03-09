@@ -1,7 +1,7 @@
 3279c01f6caf536d363ded574523fef7 *ChangeLog
-6e0e1c1ce6a73650587781d5d0866498 *DESCRIPTION
+76bdb6ee388fe2d650941eb138b76263 *DESCRIPTION
 6c9c5588ac5473db103c8de04338c904 *NAMESPACE
-f2f00770a12f7c8c026c1928d12bef3f *NEWS
+573e765dbaf9b92e72c2167fb561d8a2 *NEWS
 015d4f88f384871659053b52d378b962 *R/KR-Sigma-G2.R
 7f17aca2b6550f68b23c2faff800c3f8 *R/KR-across-versions.R
 4babf9bf83a39ae02f42fb49d9f3c0dc *R/KR-modcomp.R
@@ -12,7 +12,7 @@ e7f296cc5ecdbcbf583f9cea74b6245a *R/KR-utils.R
 896258c23ba2fdd6d7dcda164747dbea *R/PB-refdist.R
 0b7feed23b7c977e4066547c0fe92d6b *R/PB-utils.R
 9c1bac981405d1bf18a48f1c3218e8b5 *R/SAT-modcomp.R
-b0730a81872d10cb0496169782297ca2 *R/data-beets.R
+be8744773b3d0dbb9ebc4957921a54bf *R/data-beets.R
 94d64fd2f1ca6c7cb800ed79522fed60 *R/data-budworm.R
 1af8640e29be21efe84e65dccd908134 *R/getKR.R
 5d1e277317ad81d659e16d37dd15ef89 *R/get_ddf_Lb.R
@@ -26,12 +26,12 @@ b0730a81872d10cb0496169782297ca2 *R/data-beets.R
 2f0435596b9735ee0852c2d135281569 *inst/CITATION
 a1f073d2a8539678ee0ee0f79184178d *inst/doc/coercion.R
 46fc1f3ccebd87ff0988272385282ca2 *inst/doc/coercion.Rnw
-83acac966632f416060da94697272c03 *inst/doc/coercion.pdf
+efb4ffd229ff9963390e1031d2007f25 *inst/doc/coercion.pdf
 763cbfbf07cc25c593f104b1b5cb4b41 *inst/doc/pbkrtest.R
 56750b6576c3a6c4fe8484b5aedbfeff *inst/doc/pbkrtest.Rnw
-da4deaeb470e4b0a34c2e77eb4444447 *inst/doc/pbkrtest.pdf
+9c9620cef64f7aa61f3a67f550a1db7f *inst/doc/pbkrtest.pdf
 cd74378c3f739073feea6d88dc38fc18 *man/compute_auxillary.Rd
-356d0a1e4b7ec047652888e13c58b42d *man/data-beets.Rd
+3f2dd16922eff9acf1da8c0cb05b0c2b *man/data-beets.Rd
 1b5ad0a8036bad4511136fcb5120ed0d *man/data-budworm.Rd
 6cbc3b21441a255670e66e0190ee92b2 *man/devfun_vp.Rd
 10c50cfe579d9ea6bf4d0011ce7ed371 *man/get_Fstat_ddf.Rd
