@@ -1,11 +1,11 @@
 ################################################################################
 #'
-#' @title Ajusted covariance matrix for linear mixed models according
+#' @title Adjusted covariance matrix for linear mixed models according
 #'     to Kenward and Roger
-#' @description Kenward and Roger (1997) describbe an improved small
+#' @description Kenward and Roger (1997) describe an improved small
 #'     sample approximation to the covariance matrix estimate of the
 #'     fixed parameters in a linear mixed model.
-#' @name kr-vcov
+#' @name kr-vcovAdj
 #'
 ################################################################################
 ## Implemented in Banff, august 2013; Søren Højsgaard
@@ -17,10 +17,10 @@
 #' @param details If larger than 0 some timing details are printed.
 #' @return \item{phiA}{the estimated covariance matrix, this has attributed P, a
 #'     list of matrices used in \code{KR_adjust} and the estimated matrix W of
-#'     the variances of the covariance parameters of the random effetcs}
+#'     the variances of the covariance parameters of the random effects}
 #' 
 #' \item{SigmaG}{list: Sigma: the covariance matrix of Y; G: the G matrices that
-#' sum up to Sigma; n.ggamma: the number (called M in the article) of G
+#' sum up to Sigma; `n.ggamma`: the number (called M in the article) of G
 #' matrices) }
 #'
 #' @note If $N$ is the number of observations, then the \code{vcovAdj()}
@@ -69,13 +69,13 @@
 #' 
 #' @export vcovAdj
 #' 
-#' @rdname kr-vcov
+#' @rdname kr-vcovAdj
 vcovAdj <- function(object, details=0){
   UseMethod("vcovAdj")
 }
 
 #' @method vcovAdj lmerMod
-#' @rdname kr-vcov
+#' @rdname kr-vcovAdj
 #' @export vcovAdj.lmerMod
 vcovAdj.lmerMod <- function(object, details=0){
     if (!(getME(object, "is_REML"))) {
@@ -92,12 +92,10 @@ vcovAdj.lmerMod <- function(object, details=0){
 #' @export
 vcovAdj.lmerMod <- vcovAdj.lmerMod
 
-
-
 ## Dette er en kopi af '2015' udgaven
 vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
 
-    details=0
+    details = 0
     DB <- details > 0 ## debugging only
     t0 <- proc.time()
 
@@ -110,12 +108,14 @@ vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
     }
     
     
-    ##SigmaInv <- chol2inv( chol( forceSymmetric(SigmaG$Sigma) ) )
-    SigmaInv <- chol2inv( chol( forceSymmetric(as(SigmaG$Sigma, "matrix"))))
+    SigmaInv <- chol2inv( chol( forceSymmetric(SigmaG$Sigma) ) )
+    ## SS <<- SigmaG$Sigma
+    ## November 2022: The line below causes random errors
+    ## SigmaInv <- chol2inv( chol( forceSymmetric(as(SigmaG$Sigma, "matrix"))))
     ##SigmaInv <- as(SigmaInv, "dpoMatrix")
-    
+
     if(DB){
-        cat(sprintf("Finding SigmaInv: %10.5f\n", (proc.time()-t0)[1] ));
+        cat(sprintf("Finding SigmaInv:    time: %10.5f\n", (proc.time()-t0)[1] ));
         t0 <- proc.time()
     }
 
@@ -133,7 +133,7 @@ vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
         HH[[ ii ]] <- SigmaG$G[[ii]] %*% SigmaInv
         OO[[ ii ]] <- HH[[ ii ]] %*% X       
     }
-    if(DB){cat(sprintf("Finding TT, HH, OO  %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
+    if(DB){cat(sprintf("Finding TT, HH, OO:  time: %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
     
     ## Finding PP, QQ
     PP <- QQ <- NULL
@@ -143,7 +143,7 @@ vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
         for (ss in rr:n.ggamma) {
             QQ <- c(QQ, list(OrTrans %*% SigmaInv %*% OO[[ss]] ))
         }}
-    if(DB){cat(sprintf("Finding PP,QQ:    %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
+    if(DB){cat(sprintf("Finding PP, QQ:      time: %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
 
 
     ##stat15 <<- list(HH=HH, OO=OO, PP=PP, Phi=Phi, QQ=QQ)
@@ -154,7 +154,7 @@ vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
         for (ss in rr:n.ggamma){
             Ktrace[rr,ss] <- Ktrace[ss,rr]<- sum( HrTrans * HH[[ss]] )
         }}
-    if(DB){cat(sprintf("Finding Ktrace:   %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
+    if(DB){cat(sprintf("Finding Ktrace:      time: %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
 
     ## Finding information matrix
     IE2 <- matrix( NA, nrow=n.ggamma, ncol=n.ggamma )
@@ -165,7 +165,7 @@ vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
             IE2[ii,jj]<- IE2[jj,ii] <- Ktrace[ii,jj] -
                 2 * sum(Phi * QQ[[ www ]]) + sum( Phi.P.ii * ( PP[[jj]] %*% Phi))
         }}
-    if(DB){cat(sprintf("Finding IE2:      %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
+    if(DB){cat(sprintf("Finding IE2:         time: %10.5f\n", (proc.time()-t0)[1] )); t0 <- proc.time()}
 
     eigenIE2 <- eigen(IE2, only.values=TRUE)$values
     condi    <- min(abs(eigenIE2))
@@ -239,7 +239,7 @@ vcovAdj_internal <- function(Phi, SigmaG, X, details=0){
 
 
 ## #' @method vcovAdj mer
-## #' @rdname kr-vcov
+## #' @rdname kr-vcovAdj
 ## #' @export
 ## vcovAdj.mer <- vcovAdj.lmerMod
 

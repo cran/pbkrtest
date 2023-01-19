@@ -2,6 +2,7 @@
 ##
 #' @title F-test and degrees of freedom based on Satterthwaite approximation
 #' @description An approximate F-test based on the Satterthwaite approach.
+#' @concept model_comparison
 #' @name sat-modcomp
 #' 
 ## ##########################################################################
@@ -44,10 +45,6 @@
 #' @param eps A small number.
 #' @param details If larger than 0 some timing details are printed.
 #'
-#' @note This code is greatly inspired by code in the lmerTest
-#'     package. This is a recent addition to the pbkrtest package;
-#'     please report unexpected behaviour.
-#'
 #' @author Søren Højsgaard, \email{sorenh@@math.aau.dk}
 #' 
 #' @seealso \code{\link{getKR}}, \code{\link{lmer}}, \code{\link{vcovAdj}},
@@ -57,6 +54,8 @@
 #'     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
 #'     Models - The R Package pbkrtest., Journal of Statistical Software,
 #'     58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
+#'
+#' 
 #' 
 #' @keywords models inference
 #' @examples
@@ -93,7 +92,7 @@ SATmodcomp.lmerMod <- function(largeModel, smallModel, details=0, eps=sqrt(.Mach
     SATmodcomp_internal(largeModel=largeModel, smallModel=smallModel, eps=eps)
 }
 
-## SATmodcomp_internal is inspired by code in the lmerTest package
+
 SATmodcomp_internal <- function(largeModel, smallModel, eps=sqrt(.Machine$double.eps)){
 
     if (inherits(smallModel, "formula"))
@@ -101,7 +100,7 @@ SATmodcomp_internal <- function(largeModel, smallModel, eps=sqrt(.Machine$double
 
     w <- modcomp_init(largeModel, smallModel, matrixOK = TRUE)
 
-    if (w == -1) stop('Models have equal mean stucture or are not nested')
+    if (w == -1) stop('Models have equal mean stucture or are not nested...')
     if (w == 0){
         ## First given model is submodel of second; exchange the models
         tmp <- largeModel; largeModel <- smallModel; smallModel <- tmp
@@ -109,12 +108,16 @@ SATmodcomp_internal <- function(largeModel, smallModel, eps=sqrt(.Machine$double
 
     ## All computations are based on 'largeModel' and the restriction matrix 'L'
     ## -------------------------------------------------------------------------
+
+    ## print(largeModel)
+    ## print(smallModel)
+    largeModel <- update(largeModel, REML=TRUE) ## FIXME: Almost surely
     
     t0    <- proc.time()    
-    L     <- model2remat(largeModel, smallModel)
+    L     <- model2restriction_matrix(largeModel, smallModel)
      
     beta <- getME(largeModel, "beta")
-    aux  <- compute_auxillary(largeModel)
+    aux  <- compute_auxiliary(largeModel)
     vcov_Lbeta <- L %*% aux$vcov_beta %*% t(L) # Var(contrast) = Var(Lbeta)
 
     eig_vcov_Lbeta <- eigen(vcov_Lbeta)
@@ -179,104 +182,6 @@ prform  <- function(form){
 }
 
 
-## #' @export
-## tidy.KRmodcomp <- function (x, conf.int = FALSE, conf.level = 0.95, exponentiate = FALSE, 
-##     ...) 
-## {
-##     ##co <- stats::coef(summary(x))
-##     ## ret <- as_tidy_tibble(co, c("estimate", "std.error", "statistic", 
-##     ##                             "p.value")[1:ncol(co)])
-
-##     ret <- x$test
-##     rr <<- ret
-
-
-##     if (conf.int) {
-##         ci <- broom:::broom_confint_terms(x, level = conf.level)
-##         ret <- dplyr::left_join(ret, ci, by = "term")
-##     }
-##     ## if (exponentiate) {
-##     ##     if (is.null(x$family) || (x$family$link != "logit" && 
-##     ##         x$family$link != "log")) {
-##     ##         warning(paste("Exponentiating coefficients, but model did not use", 
-##     ##             "a log or logit link function"))
-##     ##     }
-##     ##     ret <- exponentiate(ret)
-##     ## }
-##     ret
-## }
-
-
-#' @export 
-tidy.PBmodcomp <- function(x, ...){
-    ret <- x$test    
-    as_tibble(cbind(type=rownames(ret), ret))
-}
-
-#' @export 
-tidy.KRmodcomp <- function(x, ...){
-    ret <- x$test    
-    as_tibble(cbind(type=rownames(ret), ret))
-}
-
-#' @export 
-tidy.SATmodcomp <- function(x, ...){
-    ret <- x$test
-    as_tibble(cbind(type="Ftest", ret))    
-}
-
-#' @export 
-as.data.frame.PBmodcomp <- function(x, ...){
-    x$test
-}
-
-#' @export 
-as.data.frame.KRmodcomp <- function(x, ...){
-    x$test
-}
-
-#' @export 
-as.data.frame.SATmodcomp <- function(x, ...){
-    x$test
-}
-
-
-
-
-
-
-
-
-## #' @export
-## summary.PBmodcomp <- function(object, ...){
-##   ans <- .summarizePB(object$LRTstat, object$ref)
-##   ans$formula.large <- object$formula.large
-##   ans$formula.small <- object$formula.small
-##   class(ans) <- "summaryPB"
-##   ans
-## }
-
-## #' @export
-## print.summaryPB <- function(x, ...){
-##   .PBcommon(x)
-##   ans <- x$test
-##   printCoefmat(ans, tst.ind=1, na.print='', has.Pvalue=TRUE)
-##   cat("\n")
-
-## ##   ci <- x$ci
-## ##   cat(sprintf("95 pct CI for PBtest   : [%s]\n", toString(ci)))
-## ##   mo <- x$moment
-## ##   cat(sprintf("Reference distribution : mean=%f var=%f\n", mo[1], mo[2]))
-## ##   ga <- x$gamma
-## ##   cat(sprintf("Gamma approximation    : scale=%f shape=%f\n", ga[1], ga[2]))
-
-##   return(invisible(x))
-## }
-
-
-
-
-
 ## Returns the deviance function for a linear mixed model.
 get_devfun <- function(model){
     if (!inherits(model, "lmerMod")) stop("'model' not an 'lmerMod'")
@@ -293,10 +198,10 @@ get_devfun <- function(model){
 ## ####### compute_auxillary
 ## ####### ################################################ #'
 #'
-#' Compute_auxillary quantities needed for the Satterthwaite
+#' Compute_auxiliary quantities needed for the Satterthwaite
 #' approximation.
 #'
-#' Computes vcov of variance parameters (theta, sigma), jacobian of
+#' Computes variance-covariance matrix of variance parameters (theta, sigma), the Jacobian of
 #' each variance parameter etc.
 #'
 #' @param model A linear mixed model object
@@ -305,11 +210,9 @@ get_devfun <- function(model){
 #' @author Søren Højsgaard
 #'
 #' @return A list
-#' @details The code is greatly inspired by code from the lmerTest
-#'     package.
 #' @keywords internal
 
-compute_auxillary <- function(model, tol=1e-6){
+compute_auxiliary <- function(model, tol=1e-6){
     
     if (!inherits(model, "lmerMod")) stop("'model' not an 'lmerMod'")
 
@@ -359,7 +262,7 @@ compute_auxillary <- function(model, tol=1e-6){
 
     ## Moore-Penrose generalized inverse for h:
     h_inv <- with(eig_h, {
-        vectors[, pos, drop=FALSE] %*% diag(1/values[pos], nrow=q) %*%
+        vectors[, pos, drop=FALSE] %*% diag(1 / values[pos], nrow=q) %*%
             t(vectors[, pos, drop=FALSE]) })
 
     out$vcov_varpar <- 2 * h_inv # vcov(varpar)
@@ -372,9 +275,11 @@ compute_auxillary <- function(model, tol=1e-6){
     jac <- numDeriv::jacobian(func=get_covbeta, x=varpar_opt, devfun=devfun)
 
     ## List of jacobian matrices
-    out$jacobian_list <- lapply(1:ncol(jac), function(i)
-        array(jac[, i], dim=rep(length(getME(model, "beta")), 2)))
-
+    out$jacobian_list <-
+        lapply(1:ncol(jac),
+               function(i) {
+                   array(jac[, i], dim=rep(length(getME(model, "beta")), 2))
+               })    
     out
 }
 
@@ -385,55 +290,61 @@ qform <- function(x, A) {
 ## ##############################################
 ## ######## get_Fstat_ddf()
 ## ##############################################
-#' Compute denominator df for F-test
+#' Compute denominator degrees of freedom for F-test
 #'
-#' From a vector of denominator df from independent t-statistics (\code{nu}),
-#' the denominator df for the corresponding F-test is computed.
+#' From a vector of denominator degrees of freedom from independent t-statistics (\code{nu}),
+#' the denominator degrees of freedom for the corresponding F-test is computed.
 #'
 #' Note that if any \code{nu <= 2} then \code{2} is returned. Also, if all nu
-#' are within tol of each other the simple average of the nu-vector is returned.
+#' are within `tol` of each other the simple average of the nu-vector is returned.
 #' This is to avoid downward bias.
 #'
-#' @param nu vector of denominator df for the t-statistics
-#' @param tol tolerance on the consequtive differences between elements of nu to
-#' determine if mean(nu) should be returned
+#' @param nu vector of denominator degrees of freedom for the
+#'     t-statistics
+#' @param tol tolerance on the consecutive differences between
+#'     elements of nu to determine if mean(nu) should be returned
 #'
 #' @author Rune Haubo B. Christensen. Adapted to pbkrtest by Søren Højsgaard.
 #'
-#' @return the denominator df; a numerical scalar
+#' @return the denominator degrees of freedom; a numerical scalar
 #' @keywords internal
 
 get_Fstat_ddf <- function(nu, tol=1e-8) {
-  # Computes denominator df for an F-statistic that is derived from a sum of
+  # Computes denominator degrees of freedom for an F-statistic that is derived from a sum of
   # squared t-statistics each with nu_m degrees of freedom.
   #
-  # nu : vector of denominator df for the t-statistics
+  # nu : vector of denominator degrees of freedom for the t-statistics
   # tol: tolerance on the consequtive differences between elements of nu to
   #      determine if mean(nu) should be returned.
   #
   # Result: a numeric scalar
   #
   # Returns nu if length(nu) == 1. Returns mean(nu) if all(abs(diff(nu)) < tol;
-  # otherwise ddf appears to be downward biased.
+  # otherwise denominator degrees of freedom appears to be downward biased.
   fun <- function(nu) {
     if(any(nu <= 2)) 2 else {
       E <- sum(nu / (nu - 2))
       2 * E / (E - (length(nu))) # q = length(nu) : number of t-statistics
     }
   }
-  stopifnot(length(nu) >= 1,
-            # all(nu > 0), # returns 2 if any(nu < 2)
-            all(sapply(nu, is.numeric)))
-  if(length(nu) == 1L) return(nu)
-  if(all(abs(diff(nu)) < tol)) return(mean(nu))
-  if(!is.list(nu)) fun(nu) else vapply(nu, fun, numeric(1L))
+    stopifnot(length(nu) >= 1,
+                                        ## all(nu > 0), # returns 2 if any(nu < 2)
+              all(sapply(nu, is.numeric)))
+    if (length(nu) == 1L)
+        return(nu)
+    if (all(abs(diff(nu)) < tol))
+        return(mean(nu))
+    if (!is.list(nu))
+        fun(nu)
+    else
+        vapply(nu, fun, numeric(1L))
 }
 
 
 ##############################################
 ######## devfun_vp()
 ##############################################
-#' Compute Deviance of an LMM as a Function of Variance Parameters
+#' Compute deviance of a linear mixed model as a function of variance parameters
 #'
 #' This function is used for extracting the asymptotic variance-covariance matrix
 #'   of the variance parameters.
@@ -471,14 +382,14 @@ devfun_vp <- function(varpar, devfun, reml) {
 ##############################################
 ######## get_covbeta()
 ##############################################
-#' Compute cov(beta) as a function of varpar of an LMM
+#' Compute covariance of fixed effect parameters as a function of variance parameters of a linear mixed model
 #'
-#' At the optimum cov(beta) is available as vcov(lmer-model). This function
-#' computes cov(beta) at non (RE)ML estimates of \code{varpar}.
+#' At the optimum the covariance is available as `vcov(lmer-model)`. This function
+#' computes `cov(beta)` at non (RE)ML estimates of `varpar`.
 #'
 #' @inheritParams devfun_vp
 #'
-#' @return cov(beta) at supplied varpar values.
+#' @return The covariances matrix of the fixed effects at supplied `varpar` values.
 #' @author Rune Haubo B. Christensen. Adapted to pbkrtest by Søren Højsgaard.
 #' @keywords internal
 #' 

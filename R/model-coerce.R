@@ -18,8 +18,8 @@
 #' @param REML Controls if new model object should be fitted with REML or ML.
 #' @param ... Additional arguments; not used.
 #' 
-#' @return \code{model2remat}: A restriction matrix.
-#'     \code{remat2model}: A model object.
+#' @return \code{model2restriction_matrix}: A restriction matrix.
+#'     \code{restriction_matrix2model}: A model object.
 #'
 #' @note That these functions are visible is a recent addition; minor changes
 #'     may occur.
@@ -44,12 +44,12 @@
 #' sug.s <- update(sug, .~. - sow)
 #' 
 #' ## Construct restriction matrices from models
-#' L.h <- model2remat(sug, sug.h); L.h
-#' L.s <- model2remat(sug, sug.s); L.s
+#' L.h <- model2restriction_matrix(sug, sug.h); L.h
+#' L.s <- model2restriction_matrix(sug, sug.s); L.s
 #' 
 #' ## Construct submodels from restriction matrices
-#' mod.h <- remat2model(sug, L.h); mod.h
-#' mod.s <- remat2model(sug, L.s); mod.s
+#' mod.h <- restriction_matrix2model(sug, L.h); mod.h
+#' mod.s <- restriction_matrix2model(sug, L.s); mod.s
 #' 
 #' ## Sanity check: The models have the same fitted values and log likelihood
 #' plot(fitted(mod.h), fitted(sug.h))
@@ -59,37 +59,37 @@
 #' logLik(mod.s)
 #' logLik(sug.s)
 
-#' @export model2remat
+#' @export model2restriction_matrix
 #' @rdname model-coerce
-model2remat <- function (largeModel, smallModel, sparse=FALSE) {
-    UseMethod("model2remat")
+model2restriction_matrix <- function (largeModel, smallModel, sparse=FALSE) {
+    UseMethod("model2restriction_matrix")
 }
 
 #' @export
-model2remat.default <- function (largeModel, smallModel, sparse=FALSE) {
-    stop("No useful default method for 'model2remat'")
+model2restriction_matrix.default <- function (largeModel, smallModel, sparse=FALSE) {
+    stop("No useful default method for 'model2restriction_matrix'")
 }
 
-#' @method model2remat merMod
+#' @method model2restriction_matrix merMod
 #' @export
-model2remat.merMod <- function (largeModel, smallModel, sparse=FALSE) {
-    ## cat("model2remat.merMod\n")
-    ## print(smallModel)
+model2restriction_matrix.merMod <- function (largeModel, smallModel, sparse=FALSE) {
+    ## cat("model2restriction_matrix.merMod\n")
+    ## print(largeModel); print(smallModel)
     L <- if (is.numeric(smallModel)) {
              force_full_rank(smallModel)
-         } else  { #smallModel is lmerMod
-             make_remat(getME(largeModel, 'X'),  getME(smallModel, 'X'))
+         } else  { ## smallModel is lmerMod
+             make_restriction_matrix(getME(largeModel, 'X'), getME(smallModel, 'X'))
          }
     if (sparse) .makeSparse(L) else L
 }
 
-#' @method model2remat lm
+#' @method model2restriction_matrix lm
 #' @export
-model2remat.lm <- function (largeModel, smallModel, sparse=FALSE) {
+model2restriction_matrix.lm <- function (largeModel, smallModel, sparse=FALSE) {
     L <- if (is.numeric(smallModel)) {
              force_full_rank(smallModel)
          } else  { 
-             make_remat(model.matrix(largeModel), model.matrix(smallModel))
+             make_restriction_matrix(model.matrix(largeModel), model.matrix(smallModel))
          }
     if (sparse) .makeSparse(L) else L
 }
@@ -97,19 +97,19 @@ model2remat.lm <- function (largeModel, smallModel, sparse=FALSE) {
 
 #' @rdname model-coerce
 #' @export
-remat2model <- function(largeModel, L, REML=TRUE, ...){
-  UseMethod("remat2model")
+restriction_matrix2model <- function(largeModel, L, REML=TRUE, ...){
+  UseMethod("restriction_matrix2model")
 }
 
 #' @export
-remat2model.default <- function(largeModel, L, REML=TRUE, ...){
-    stop("No useful default method for 'remat2model'")
+restriction_matrix2model.default <- function(largeModel, L, REML=TRUE, ...){
+    stop("No useful default method for 'restriction_matrix2model'")
 }
 
-remat2model_internal <- function(largeModel, L, XX.lg){
+restriction_matrix2model_internal <- function(largeModel, L, XX.lg){
     form <- as.formula(formula(largeModel))    
     attributes(XX.lg)[-1] <- NULL
-    XX.sm <- make_modelmat(XX.lg, L)
+    XX.sm <- make_model_matrix(XX.lg, L)
     
     ncX.sm  <- ncol(XX.sm)
     colnames(XX.sm) <- paste(".X", 1:ncX.sm, sep='')
@@ -124,23 +124,42 @@ remat2model_internal <- function(largeModel, L, XX.lg){
 
 ## #' @rdname model-coerce
 #' @export
-remat2model.merMod <- function(largeModel, L, REML=TRUE, ...){
+restriction_matrix2model.lmerMod <- function(largeModel, L, REML=TRUE, ...){
 
-    zzz  <- remat2model_internal(largeModel, L, getME(largeModel, "X"))
+    zzz  <- restriction_matrix2model_internal(largeModel, L, getME(largeModel, "X"))
     
     new.formula <- as.formula(paste(zzz$new_form$lhs, "~ -1+", zzz$rhs.fix2,
                                     "+", zzz$new_form$rhs.ran))
     new.data    <- cbind(zzz$XX.sm, eval(largeModel@call$data))
     ans <- update(largeModel, eval(new.formula), data=new.data)
-    if (!REML) ans <- update(ans, REML=FALSE)
+    if (!REML)
+        ans <- update(ans, REML=FALSE)
     ans
 }
 
 ## #' @rdname model-coerce
 #' @export
-remat2model.lm <- function(largeModel, L, ...){
+restriction_matrix2model.glmerMod <- function(largeModel, L, REML=TRUE, ...){
+
+    zzz  <- restriction_matrix2model_internal(largeModel, L, getME(largeModel, "X"))
     
-    zzz  <- remat2model_internal(largeModel, L, model.matrix(largeModel))
+    new.formula <- as.formula(paste(zzz$new_form$lhs, "~ -1+", zzz$rhs.fix2,
+                                    "+", zzz$new_form$rhs.ran))
+    new.data    <- cbind(zzz$XX.sm, eval(largeModel@call$data))
+    ans <- update(largeModel, eval(new.formula), data=new.data)
+    ## if (!REML)
+        ## ans <- update(ans, REML=FALSE)
+    ans
+}
+
+
+
+
+## #' @rdname model-coerce
+#' @export
+restriction_matrix2model.lm <- function(largeModel, L, ...){
+    
+    zzz  <- restriction_matrix2model_internal(largeModel, L, model.matrix(largeModel))
     
     new.formula <- as.formula(paste(zzz$new_form$lhs, "~ -1+", zzz$rhs.fix2))
     new.data    <- as.data.frame(cbind(zzz$XX.sm, eval(largeModel$model)))
@@ -155,7 +174,6 @@ remat2model.lm <- function(largeModel, L, ...){
 
 
 
-
 ## ##############################################################
 
 ## X is model matrix for large model; L is a restriction matrix;
@@ -165,8 +183,8 @@ remat2model.lm <- function(largeModel, L, ...){
 #' @rdname model-coerce
 #' @param L A restriction matrix; a full rank matrix with as many columns as `X` has.
 #' @export
-make_modelmat <- function(X, L) {
-    ##cat("X:\n"); print(X); cat("L:\n"); print(L)
+make_model_matrix <- function(X, L) {
+    ## cat("X:\n"); print(X); cat("L:\n"); print(L)
     ## find A such that <A>={X b| b in Lb=0}
 
     if (!inherits(L, c("matrix", "Matrix")) )
@@ -176,7 +194,7 @@ make_modelmat <- function(X, L) {
         print(c( ncol(X), ncol(L) ))
         stop('Number of columns of X and L not equal \n')
     }
-    X2 <- X %*% .orthComplement(t(L))
+    X2 <- X %*% orthogonal_complement(t(L))
     X2
 }
 
@@ -186,39 +204,37 @@ make_modelmat <- function(X, L) {
 ## model. Output is restriction matrix L
 
 #' @rdname model-coerce
-#' @param X,X2 Model matrices. Must have same numer of rows.
-#' @details `make_remat` Make a restriction matrix. If span(X2) is in
+#' @param X,X2 Model matrices. Must have same number of rows.
+#' @details `make_restriction_matrix` Make a restriction matrix. If span(X2) is in
 #'     span(X) then the corresponding restriction matrix `L` is
 #'     returned.
 #' @export
-make_remat <- function(X, X2) {
+make_restriction_matrix <- function(X, X2) {
   ## <X2> in <X>
   ## determine L such that  <X2>={Xb| b in Lb=0}
-  d <- rankMatrix(cbind(X2, X)) - rankMatrix(X)
-  if (d > 0) {
-    stop('Error: <X2> not subspace of <X> \n')
-  }
-  Q  <- qr.Q(qr(cbind(X2, X)))
-  Q2 <- Q[, (rankMatrix(X2) + 1) : rankMatrix(X)]
-  L  <- t(Q2) %*% X
-  ## Make rows of L2 orthogonal
-  L <- t(qr.Q(qr(t(L))))
-  L
+    d <- rankMatrix_(cbind(X2, X)) - rankMatrix_(X)
+    if (d > 0) {
+        stop('Error: <X2> not subspace of <X> \n')
+    }
+    Q  <- qr.Q(qr(cbind(X2, X)))
+    Q2 <- Q[, (rankMatrix_(X2) + 1) : rankMatrix_(X)]
+    L  <- t(Q2) %*% X
+    ## Make rows of L2 orthogonal 
+    L <- t(qr.Q(qr(t(L))))
+    zapsmall(L)
 }
-
 
 force_full_rank <- function(L){
     ## ensures that restriction matrix L is of full row rank:
     if (is.numeric(L) && !is.matrix(L))
         L <- matrix(L, nrow=1)
-    q  <- rankMatrix(L)
+    q  <- rankMatrix_(L)
     if (q < nrow(L)){
         t(qr.Q(qr(t(L)))[ ,1:qr(L)$rank])
     } else {
         L
     }
 }
-
 
 .formula2list <- function(form){
   lhs <- form[[2]]
@@ -244,6 +260,63 @@ force_full_rank <- function(L){
               rhs.ran=rane)
   ans
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -288,7 +361,7 @@ force_full_rank <- function(L){
     ## ## common
     ## form <- as.formula(formula(largeModel))
     ## attributes(XX.lg)[-1] <- NULL
-    ## XX.sm <- zapsmall(make_modelmat(XX.lg, LL))
+    ## XX.sm <- zapsmall(make_model_matrix(XX.lg, LL))
     
     ## ncX.sm  <- ncol(XX.sm)
     ## colnames(XX.sm) <- paste(".X", 1:ncX.sm, sep='')

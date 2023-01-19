@@ -18,7 +18,7 @@ KRmodcomp(largeModel, smallModel, betaH = 0, details = 0)
 \item{smallModel}{An \code{lmer} model or a restriction matrix}
 
 \item{betaH}{A number or a vector of the beta of the hypothesis, e.g. L
-beta=L betaH. betaH=0 if modelSmall is a model not a restriction matrix.}
+beta=L betaH. betaH=0 if \code{smallModel} is a model object and not a restriction matrix.}
 
 \item{details}{If larger than 0 some timing details are printed.}
 }
@@ -27,10 +27,10 @@ An approximate F-test based on the Kenward-Roger approach.
 }
 \details{
 The model \code{object} must be fitted with restricted maximum
-    likelihood (i.e. with \code{REML=TRUE}). If the object is fitted with
-    maximum likelihood (i.e. with \code{REML=FALSE}) then the model is
-    refitted with \code{REML=TRUE} before the p-values are calculated. Put
-    differently, the user needs not worry about this issue.
+likelihood (i.e. with \code{REML=TRUE}). If the object is fitted with
+maximum likelihood (i.e. with \code{REML=FALSE}) then the model is
+refitted with \code{REML=TRUE} before the p-values are calculated. Put
+differently, the user needs not worry about this issue.
 
 An F test is calculated according to the approach of Kenward and Roger
 (1997).  The function works for linear mixed models fitted with the
@@ -58,18 +58,18 @@ implementations of the Kenward-Roger approach!
 }
 \note{
 This functionality is not thoroughly tested and should be used with
-    care. Please do report bugs etc.
+care. Please do report bugs etc.
 }
 \examples{
 
 (fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
 ## removing Days
 (fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
-anova(fmLarge,fmSmall)
-KRmodcomp(fmLarge,fmSmall)
+anova(fmLarge, fmSmall)
+KRmodcomp(fmLarge, fmSmall)
 
 ## The same test using a restriction matrix
-L <- cbind(0,1)
+L <- cbind(0, 1)
 KRmodcomp(fmLarge, L)
 
 ## Same example, but with independent intercept and slope effects:
@@ -82,20 +82,21 @@ KRmodcomp(m.large, m.small)
 }
 \references{
 Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
-    Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
-    Models - The R Package pbkrtest., Journal of Statistical Software,
-    58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
+Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
+Models - The R Package pbkrtest., Journal of Statistical Software,
+58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
 
 Kenward, M. G. and Roger, J. H. (1997), \emph{Small Sample Inference for
 Fixed Effects from Restricted Maximum Likelihood}, Biometrics 53: 983-997.
 }
 \seealso{
 \code{\link{getKR}}, \code{\link{lmer}}, \code{\link{vcovAdj}},
-    \code{\link{PBmodcomp}}
+\code{\link{PBmodcomp}}
 }
 \author{
 Ulrich Halekoh \email{uhalekoh@health.sdu.dk}, Søren Højsgaard
-    \email{sorenh@math.aau.dk}
+\email{sorenh@math.aau.dk}
 }
+\concept{model_comparison}
 \keyword{inference}
 \keyword{models}

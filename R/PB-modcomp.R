@@ -1,14 +1,8 @@
-##########################################################
-###
-### 
-###
-##########################################################
-
 #' @title Model comparison using parametric bootstrap methods.
 #' 
 #' @description Model comparison of nested models using parametric bootstrap
 #'     methods.  Implemented for some commonly applied model types.
-#'
+#' @concept model_comparison
 #' @name pb-modcomp
 #' 
 #' @details
@@ -21,7 +15,7 @@
 #'     worry about this issue.
 #' 
 #' Under the fitted hypothesis (i.e. under the fitted small model) \code{nsim}
-#' samples of the likelihood ratio test statistic (LRT) are generetated.
+#' samples of the likelihood ratio test statistic (LRT) are generated.
 #' 
 #' Then p-values are calculated as follows:
 #' 
@@ -55,12 +49,12 @@
 #'     distribution.
 #' @param ref Vector containing samples from the reference
 #'     distribution. If NULL, this vector will be generated using
-#'     PBrefdist().
+#'     `PBrefdist()`.
 #' @param seed A seed that will be passed to the simulation of new
 #'     datasets.
 #' @param h For sequential computing for bootstrap p-values: The
 #'     number of extreme cases needed to generate before the sampling
-#'     proces stops.
+#'     process stops.
 #' @param cl A vector identifying a cluster; used for calculating the
 #'     reference distribution using several cores. See examples below.
 #' @param details The amount of output produced. Mainly relevant for
@@ -75,14 +69,14 @@
 #' practice on can: We speculate that the reason is as follows: We simulate data
 #' under the small model and fit both the small and the large model to the
 #' simulated data. Therefore the large model represents - by definition - an
-#' overfit; the model has superfluous parameters in it. Therefore the fit of the
+#' over fit; the model has superfluous parameters in it. Therefore the fit of the
 #' two models will for some simulated datasets be very similar resulting in
 #' similar values of the log-likelihood. There is no guarantee that the the
 #' log-likelihood for the large model in practice always will be larger than for
 #' the small (convergence problems and other numerical issues can play a role
 #' here).
 #' 
-#' To look further into the problem, one can use the \code{PBrefdist()} function
+#' To look further into the problem, one can use the `PBrefdist()` function
 #' for simulating the reference distribution (this reference distribution can be
 #' provided as input to \code{PBmodcomp()}). Inspection sometimes reveals that
 #' while many values are negative, they are numerically very small. In this case
@@ -90,6 +84,8 @@
 #' invoke \code{PBmodcomp()} to get some idea about how strong influence there
 #' is on the resulting p-values. (The p-values get smaller this way compared to
 #' the case when only the originally positive values are used).
+#'
+#' 
 #' 
 #' @author Søren Højsgaard \email{sorenh@@math.aau.dk}
 #' 
@@ -115,7 +111,8 @@
 #' 
 #' anova(sug, sug.h)
 #' PBmodcomp(sug, sug.h, nsim=NSIM, cl=1)
-#' anova(sug, sug.h)
+#'
+#' anova(sug, sug.s)
 #' PBmodcomp(sug, sug.s, nsim=NSIM, cl=1)
 #' 
 #' ## Linear normal model:
@@ -125,6 +122,7 @@
 #' 
 #' anova(sug, sug.h)
 #' PBmodcomp(sug, sug.h, nsim=NSIM, cl=1)
+#' 
 #' anova(sug, sug.s)
 #' PBmodcomp(sug, sug.s, nsim=NSIM, cl=1)
 #' 
@@ -140,16 +138,18 @@
 #' 
 #' anova(glm.D93, glm.D93.o, test="Chisq")
 #' PBmodcomp(glm.D93, glm.D93.o, nsim=NSIM, cl=1)
+#' 
 #' anova(glm.D93, glm.D93.t, test="Chisq")
 #' PBmodcomp(glm.D93, glm.D93.t, nsim=NSIM, cl=1)
 #' 
 #' ## Generalized linear mixed model (it takes a while to fit these)
+#' 
 #' \dontrun{
 #' (gm1 <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
 #'               data = cbpp, family = binomial))
 #' (gm2 <- update(gm1, .~.-period))
 #' anova(gm1, gm2)
-#' PBmodcomp(gm1, gm2, cl=2)
+#' PBmodcomp(gm1, gm2)
 #' }
 #' 
 #' 
@@ -224,55 +224,50 @@ PBmodcomp.merMod <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=N
     if (inherits(smallModel, "formula"))
         smallModel  <- update(largeModel, smallModel)
 
-    ## w <- modcomp_init(largeModel, smallModel, matrixOK = TRUE)
-    ## ss <<- smallModel
-    ## ll <<- largeModel
-
-    ## if (w == -1) stop('Models have equal mean stucture or are not nested')
-
-    ## if (w == 0){
-    ##     ## First given model is submodel of second; exchange the models
-    ##     tmp <- largeModel;
-    ##     largeModel <- smallModel;
-    ##     smallModel <- tmp
-    ## }
-
     if (is.numeric(smallModel) && !is.matrix(smallModel))
         smallModel <- matrix(smallModel, nrow=1)
             
     if (inherits(smallModel, c("Matrix", "matrix"))){
         formula.small <- smallModel
-        smallModel <- remat2model(largeModel, smallModel, REML=FALSE)
+        smallModel <- restriction_matrix2model(largeModel, smallModel, REML=FALSE)
     } else {
         formula.small <- formula(smallModel)
         attributes(formula.small) <- NULL
     }
 
     ##cat("PBmodcomp.lmerMod\n")
+    ## cat("largeModel\n"); print(largeModel)
+    ## cat("smallModel\n"); print(smallModel)
+
     formula.large <- formula(largeModel)
     attributes(formula.large) <- NULL
     
     ## All computations are based on 'largeModel' and 'smallModel'
+    ## which at this point are both model objects.
     ## -----------------------------------------------------------
     
     if (is.null(ref)){
         ref <- PBrefdist(largeModel, smallModel, nsim=nsim,
                          seed=seed, cl=cl, details=details)
     }
+    ## cat("ref\n"); print(ref)
+    ## largeModel <<- largeModel
+    ## smallModel <<- smallModel
+    
+    ## dd <- logLik(largeModel) - logLik(smallModel)
+    ## cat("dd:\n"); print(dd)
+
+    ## ll.small <- logLik(smallModel, REML=FALSE)
+    ## ll.large <- logLik(largeModel, REML=FALSE)
+    ## dd <- ll.large - ll.small
+    ## cat("dd:\n"); print(dd)
     
     LRTstat     <- getLRT(largeModel, smallModel)
+    ## cat("LRTstat\n"); print(LRTstat)
+
     ans         <- .finalizePB(LRTstat, ref)
     .padPB(ans, LRTstat, ref, formula.large, formula.small)
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -326,7 +321,7 @@ PBmodcomp.lm <- function(largeModel, smallModel, nsim=1000, ref=NULL, seed=NULL,
     
     if (inherits(smallModel, c("Matrix", "matrix"))){
         formula.small <- smallModel
-        smallModel <- remat2model(largeModel, smallModel)
+        smallModel <- restriction_matrix2model(largeModel, smallModel)
     } else {
         formula.small <- formula(smallModel)
         attributes(formula.small) <- NULL
@@ -579,12 +574,12 @@ summary.PBmodcomp <- function(object, ...){
   ans <- .summarizePB(object$LRTstat, object$ref)
   ans$formula.large <- object$formula.large
   ans$formula.small <- object$formula.small
-  class(ans) <- "summaryPB"
+  class(ans) <- "summary_PBmodcomp"
   ans
 }
 
 #' @export
-print.summaryPB <- function(x, ...){
+print.summary_PBmodcomp <- function(x, ...){
   .PBcommon(x)
   ans <- x$test
   printCoefmat(ans, tst.ind=1, na.print='', has.Pvalue=TRUE)
@@ -653,6 +648,31 @@ as.data.frame.XXmodcomp <- function(x, row.names = NULL, optional = FALSE, ...){
     as.data.frame(do.call(rbind, x[-c(1:3)]))
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ## w <- modcomp_init(largeModel, smallModel, matrixOK = TRUE)
+    ## ss <<- smallModel
+    ## ll <<- largeModel
+
+    ## if (w == -1) stop('Models have equal mean stucture or are not nested')
+
+    ## if (w == 0){
+    ##     ## First given model is submodel of second; exchange the models
+    ##     tmp <- largeModel;
+    ##     largeModel <- smallModel;
+    ##     smallModel <- tmp
+    ## }
 
 
 

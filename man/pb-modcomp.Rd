@@ -62,7 +62,7 @@ distribution.}
 
 \item{ref}{Vector containing samples from the reference
 distribution. If NULL, this vector will be generated using
-PBrefdist().}
+\code{PBrefdist()}.}
 
 \item{seed}{A seed that will be passed to the simulation of new
 datasets.}
@@ -75,22 +75,22 @@ debugging purposes.}
 
 \item{h}{For sequential computing for bootstrap p-values: The
 number of extreme cases needed to generate before the sampling
-proces stops.}
+process stops.}
 }
 \description{
 Model comparison of nested models using parametric bootstrap
-    methods.  Implemented for some commonly applied model types.
+methods.  Implemented for some commonly applied model types.
 }
 \details{
 The model \code{object} must be fitted with maximum likelihood
-    (i.e. with \code{REML=FALSE}). If the object is fitted with
-    restricted maximum likelihood (i.e. with \code{REML=TRUE}) then
-    the model is refitted with \code{REML=FALSE} before the
-    p-values are calculated. Put differently, the user needs not
-    worry about this issue.
+(i.e. with \code{REML=FALSE}). If the object is fitted with
+restricted maximum likelihood (i.e. with \code{REML=TRUE}) then
+the model is refitted with \code{REML=FALSE} before the
+p-values are calculated. Put differently, the user needs not
+worry about this issue.
 
 Under the fitted hypothesis (i.e. under the fitted small model) \code{nsim}
-samples of the likelihood ratio test statistic (LRT) are generetated.
+samples of the likelihood ratio test statistic (LRT) are generated.
 
 Then p-values are calculated as follows:
 
@@ -112,16 +112,16 @@ matching the first moment of the reference distribution.
 }
 \note{
 It can happen that some values of the LRT statistic in the
-    reference distribution are negative. When this happens one will
-    see that the number of used samples (those where the LRT is
-    positive) are reported (this number is smaller than the
-    requested number of samples).
+reference distribution are negative. When this happens one will
+see that the number of used samples (those where the LRT is
+positive) are reported (this number is smaller than the
+requested number of samples).
 
 In theory one can not have a negative value of the LRT statistic but in
 practice on can: We speculate that the reason is as follows: We simulate data
 under the small model and fit both the small and the large model to the
 simulated data. Therefore the large model represents - by definition - an
-overfit; the model has superfluous parameters in it. Therefore the fit of the
+over fit; the model has superfluous parameters in it. Therefore the fit of the
 two models will for some simulated datasets be very similar resulting in
 similar values of the log-likelihood. There is no guarantee that the the
 log-likelihood for the large model in practice always will be larger than for
@@ -152,7 +152,8 @@ sug.s <- update(sug, .~. -sow)
 
 anova(sug, sug.h)
 PBmodcomp(sug, sug.h, nsim=NSIM, cl=1)
-anova(sug, sug.h)
+
+anova(sug, sug.s)
 PBmodcomp(sug, sug.s, nsim=NSIM, cl=1)
 
 ## Linear normal model:
@@ -162,6 +163,7 @@ sug.s <- update(sug, .~. -sow)
 
 anova(sug, sug.h)
 PBmodcomp(sug, sug.h, nsim=NSIM, cl=1)
+
 anova(sug, sug.s)
 PBmodcomp(sug, sug.s, nsim=NSIM, cl=1)
 
@@ -177,16 +179,18 @@ glm.D93.t <- update(glm.D93, .~. -treatment)
 
 anova(glm.D93, glm.D93.o, test="Chisq")
 PBmodcomp(glm.D93, glm.D93.o, nsim=NSIM, cl=1)
+
 anova(glm.D93, glm.D93.t, test="Chisq")
 PBmodcomp(glm.D93, glm.D93.t, nsim=NSIM, cl=1)
 
 ## Generalized linear mixed model (it takes a while to fit these)
+
 \dontrun{
 (gm1 <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
               data = cbpp, family = binomial))
 (gm2 <- update(gm1, .~.-period))
 anova(gm1, gm2)
-PBmodcomp(gm1, gm2, cl=2)
+PBmodcomp(gm1, gm2)
 }
 
 
@@ -246,9 +250,9 @@ PBmodcomp(m21, c(0, 0, 1), cl=1, nsim=NSIM)
 }
 \references{
 Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
-    Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
-    Models - The R Package pbkrtest., Journal of Statistical Software,
-    58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
+Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
+Models - The R Package pbkrtest., Journal of Statistical Software,
+58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
 }
 \seealso{
 \code{\link{KRmodcomp}}, \code{\link{PBrefdist}}
@@ -256,5 +260,6 @@ Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
 \author{
 Søren Højsgaard \email{sorenh@math.aau.dk}
 }
+\concept{model_comparison}
 \keyword{inference}
 \keyword{models}

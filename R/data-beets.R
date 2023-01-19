@@ -13,6 +13,7 @@
 #' @name data-beets
 #' @docType data
 #' @format A dataframe with 5 columns and 30 rows. 
+#' @concept data
 #'
 #' @details
 #' \preformatted{  
