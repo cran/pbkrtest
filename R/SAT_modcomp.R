@@ -3,98 +3,77 @@
 #' @title F-test and degrees of freedom based on Satterthwaite approximation
 #' @description An approximate F-test based on the Satterthwaite approach.
 #' @concept model_comparison
-#' @name sat-modcomp
+#' @name sat_modcomp
 #' 
 ## ##########################################################################
-
 #' @details
 #'
-## #' The model \code{object} must be fitted with restricted maximum
-## #'     likelihood (i.e. with \code{REML=TRUE}). If the object is fitted with
-## #'     maximum likelihood (i.e. with \code{REML=FALSE}) then the model is
-## #'     refitted with \code{REML=TRUE} before the p-values are calculated. Put
-## #'     differently, the user needs not worry about this issue.
-## #' 
-## #' An F test is calculated according to the approach of Kenward and Roger
-## #' (1997).  The function works for linear mixed models fitted with the
-## #' \code{lmer} function of the \pkg{lme4} package. Only models where the
-## #' covariance structure is a sum of known matrices can be compared.
-## #' 
-## #' The \code{largeModel} may be a model fitted with \code{lmer} either using
-## #' \code{REML=TRUE} or \code{REML=FALSE}.  The \code{smallModel} can be a model
-## #' fitted with \code{lmer}. It must have the same covariance structure as
-## #' \code{largeModel}. Furthermore, its linear space of expectation must be a
-## #' subspace of the space for \code{largeModel}.  The model \code{smallModel}
-## #' can also be a restriction matrix \code{L} specifying the hypothesis \eqn{L
-## #' \beta = L \beta_H}, where \eqn{L} is a \eqn{k \times p}{k X p} matrix and
-## #' \eqn{\beta} is a \eqn{p} column vector the same length as
-## #' \code{fixef(largeModel)}.
-#' 
-## #' The \eqn{\beta_H} is a \eqn{p} column vector.
-## #' 
-## #' Notice: if you want to test a hypothesis \eqn{L \beta = c} with a \eqn{k}
-## #' vector \eqn{c}, a suitable \eqn{\beta_H} is obtained via \eqn{\beta_H=L c}
-## #' where \eqn{L_n} is a g-inverse of \eqn{L}.
-#' 
 #' Notice: It cannot be guaranteed that the results agree with other
 #' implementations of the Satterthwaite approach!
-#' 
-#' @param largeModel An \code{lmerMod} model.
-#' @param smallModel An \code{lmerMod} model, a restriction matrix or
-#'     a model formula. See example section.
+#'
+#' @inheritParams kr_modcomp
 #' @param eps A small number.
-#' @param details If larger than 0 some timing details are printed.
 #'
 #' @author Søren Højsgaard, \email{sorenh@@math.aau.dk}
 #' 
-#' @seealso \code{\link{getKR}}, \code{\link{lmer}}, \code{\link{vcovAdj}},
-#'     \code{\link{PBmodcomp}}
+#' @seealso \code{\link{getKR}}, \code{\link[lme4]{lmer}}, \code{\link{vcovAdj}},
+#'     \code{\link{PBmodcomp}}, \code{\link{KRmodcomp}}
 #' 
-#' @references Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
-#'     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
-#'     Models - The R Package pbkrtest., Journal of Statistical Software,
-#'     58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
+#' @references Ulrich Halekoh, Søren Højsgaard (2014)., A
+#'     Kenward-Roger Approximation and Parametric Bootstrap Methods
+#'     for Tests in Linear Mixed Models - The R Package pbkrtest.,
+#'     Journal of Statistical Software, 58(10), 1-30.,
+#'     \url{https://www.jstatsoft.org/v59/i09/}
 #'
-#' 
-#' 
 #' @keywords models inference
 #' @examples
 #'
+#' (fm0 <- lmer(Reaction ~ (Days|Subject), sleepstudy))
 #' (fm1 <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
-#' L1 <- cbind(0,1)
-#' SATmodcomp(fm1, L1)
-#'
 #' (fm2 <- lmer(Reaction ~ Days + I(Days^2) + (Days|Subject), sleepstudy))
 #'
-#' ## Test for no effect of Days. There are three ways of using the function:
-#' 
-#' ## 1) Define 2-df contrast - since L has 2 (linearly independent) rows
-#' ## the F-test is on 2 (numerator) df:
+#' ## Test for no effect of Days in fm1, i.e. test fm0 under fm1
+#' SATmodcomp(fm1, "Days")
+#' SATmodcomp(fm1, ~.-Days)
+#' L1 <- cbind(0, 1) 
+#' SATmodcomp(fm1, L1)
+#' SATmodcomp(fm1, fm0)
+#' anova(fm1, fm0)
+#'
+#' ## Test for no effect of Days and Days-squared in fm2, i.e. test fm0 under fm2
+#' SATmodcomp(fm2, "(Days+I(Days^2))")
+#' SATmodcomp(fm2, ~. - Days - I(Days^2))
 #' L2 <- rbind(c(0, 1, 0), c(0, 0, 1))
 #' SATmodcomp(fm2, L2)
-#'
-#' ## 2) Use two model objects 
-#' fm3 <- update(fm2, ~. - Days - I(Days^2))
-#' SATmodcomp(fm2, fm3)
-#'
-#' ## 3) Specify restriction as formula
-#' SATmodcomp(fm2, ~. - Days - I(Days^2))
+#' SATmodcomp(fm2, fm0)
+#' anova(fm2, fm0)
+#' 
+#' ## Test for no effect of Days-squared in fm2, i.e. test fm1 under fm2
+#' SATmodcomp(fm2, "I(Days^2)")
+#' SATmodcomp(fm2, ~. - I(Days^2))
+#' L3 <- rbind(c(0, 0, 1))
+#' SATmodcomp(fm2, L3)
+#' SATmodcomp(fm2, fm1)
+#' anova(fm2, fm1)
 
 #' @export
-#' @rdname sat-modcomp
-SATmodcomp <- function(largeModel, smallModel, details=0, eps=sqrt(.Machine$double.eps)){
+#' @rdname sat_modcomp
+SATmodcomp <- function(largeModel, smallModel, betaH=0, details=0, eps=sqrt(.Machine$double.eps)){
     UseMethod("SATmodcomp")
 }
 
 #' @export
-#' @rdname sat-modcomp
-SATmodcomp.lmerMod <- function(largeModel, smallModel, details=0, eps=sqrt(.Machine$double.eps)){
-    SATmodcomp_internal(largeModel=largeModel, smallModel=smallModel, eps=eps)
+#' @rdname sat_modcomp
+SATmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0, eps=sqrt(.Machine$double.eps)){
+    SATmodcomp_internal(largeModel=largeModel, smallModel=smallModel, betaH=betaH, eps=eps)
 }
 
 
-SATmodcomp_internal <- function(largeModel, smallModel, eps=sqrt(.Machine$double.eps)){
+SATmodcomp_internal <- function(largeModel, smallModel, betaH=0, eps=sqrt(.Machine$double.eps)){
 
+    if (is.character(smallModel))
+        smallModel <- doBy::formula_add_str(formula(largeModel), terms=smallModel, op="-")
+        
     if (inherits(smallModel, "formula"))
         smallModel  <- update(largeModel, smallModel)
 
@@ -129,19 +108,28 @@ SATmodcomp_internal <- function(largeModel, smallModel, eps=sqrt(.Machine$double
     
     PtL <- crossprod(P, L)[1:qq,, drop=FALSE]
     ## print(PtL)
-    
-    t2     <- drop(PtL %*% beta)^2 / d[1:qq]
+
+    ## FIXME: do betaDiff <- beta - betaH
+
+    betaDiff <- beta - betaH
+    ## t2     <- drop(PtL %*% beta)^2 / d[1:qq]
+    t2     <- drop(PtL %*% betaDiff)^2 / d[1:qq]
     Fvalue <- sum(t2) / qq
 
     grad_PLcov <- lapply(1:qq, function(m) {
-        vapply(aux$jacobian_list, function(J)
-            qform(PtL[m, ], J), numeric(1L))
+        vapply(aux$jacobian_list,
+               function(J) {
+                   qform(PtL[m, ], J)
+               }, numeric(1L)
+               )
     })
 
     ## 2D_m^2 / g'Ag
-    nu_m <- vapply(1:qq, function(m) {
-        2*(d[m])^2 / qform(grad_PLcov[[m]], aux$vcov_varpar)
-    }, numeric(1L)) 
+    nu_m <- vapply(1:qq,
+                   function(m) {
+                       2*(d[m])^2 / qform(grad_PLcov[[m]], aux$vcov_varpar)
+                   }, numeric(1L)
+    ) 
 
     ## Compute ddf for the F-value:
     ddf <- get_Fstat_ddf(nu_m, tol=1e-8)

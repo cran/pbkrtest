@@ -4,58 +4,70 @@
 #' 
 #' @description An approximate F-test based on the Kenward-Roger approach.
 #' @concept model_comparison
-#' @name kr-modcomp
+#' @name kr_modcomp
 #' 
 ## ##########################################################################
-#' @details The model \code{object} must be fitted with restricted maximum
-#'     likelihood (i.e. with \code{REML=TRUE}). If the object is fitted with
-#'     maximum likelihood (i.e. with \code{REML=FALSE}) then the model is
-#'     refitted with \code{REML=TRUE} before the p-values are calculated. Put
-#'     differently, the user needs not worry about this issue.
+#' @details
+#'
+#' An F test is calculated according to the approach of Kenward and
+#' Roger (1997).  The function works for linear mixed models fitted
+#' with the lmer() function of the `lme4` package. Only models where
+#' the covariance structure is a linear combination (a weighted sum)
+#' of known matrices can be compared.
 #' 
-#' An F test is calculated according to the approach of Kenward and Roger
-#' (1997).  The function works for linear mixed models fitted with the
-#' \code{lmer} function of the \pkg{lme4} package. Only models where the
-#' covariance structure is a sum of known matrices can be compared.
+#' The `smallModel` is the model to be tested against the `largeModel`.
 #' 
-#' The \code{largeModel} may be a model fitted with \code{lmer} either using
-#' \code{REML=TRUE} or \code{REML=FALSE}.  The \code{smallModel} can be a model
-#' fitted with \code{lmer}. It must have the same covariance structure as
-#' \code{largeModel}. Furthermore, its linear space of expectation must be a
-#' subspace of the space for \code{largeModel}.  The model \code{smallModel}
-#' can also be a restriction matrix \code{L} specifying the hypothesis \eqn{L
-#' \beta = L \beta_H}, where \eqn{L} is a \eqn{k \times p}{k X p} matrix and
-#' \eqn{\beta} is a \eqn{p} column vector the same length as
-#' \code{fixef(largeModel)}.
+#' The `largeModel` is a model fitted with `lmer()`. A technical
+#' detail: The model must be fitted with `REML=TRUE`. If the model is
+#' fitted with `REML=FALSE` then the model is refitted with
+#' `REML=TRUE` before the p-values are calculated. Put differently,
+#' the user needs not worry about this issue.
 #' 
-#' The \eqn{\beta_H} is a \eqn{p} column vector.
+#' The `smallModel` can be one of several things:
 #' 
-#' Notice: if you want to test a hypothesis \eqn{L \beta = c} with a \eqn{k}
-#' vector \eqn{c}, a suitable \eqn{\beta_H} is obtained via \eqn{\beta_H=L c}
-#' where \eqn{L_n} is a g-inverse of \eqn{L}.
+#' 1) a model fitted with `lmer()`. It must have the same covariance
+#' structure as `largeModel`. Furthermore, its linear space of
+#' expectation must be a subspace of the space for `largeModel`.
+#'
+#' 2) a restriction matrix `L` specifying the hypothesis
+#' \deqn{L \beta = L \beta_H}
+#' where `L` is a `k x p` matrix (there are k restrictions and p is
+#' the number of fixed effect parameters (the length of
+#' `fixef(largeModel)`) and `beta_H` is a p column vector.
+#'
+#' 3) A formula or a text string specifying what is to be removed from the
+#' larger model to form the smaller model.
+#'  
+#' Notice: if you want to test a hypothesis
+#'
+#' \deqn{L \beta = c}
+#'
+#' with a \eqn{k} vector \eqn{c}, a suitable \eqn{\beta_H} is obtained
+#' via \eqn{\beta_H=L c} where \eqn{L_n} is a g-inverse of \eqn{L}.
 #' 
 #' Notice: It cannot be guaranteed that the results agree with other
 #' implementations of the Kenward-Roger approach!
 #' 
-#' @aliases KRmodcomp KRmodcomp.lmerMod KRmodcomp_internal KRmodcomp.mer
+#' @aliases KRmodcomp KRmodcomp.lmerMod KRmodcomp_internal
+#'     KRmodcomp.mer
 #' @param largeModel An \code{lmer} model
 #' @param smallModel An \code{lmer} model or a restriction matrix
-#' @param betaH A number or a vector of the beta of the hypothesis, e.g. L
-#'     beta=L betaH. betaH=0 if `smallModel` is a model object and not a restriction matrix.
+#' @param betaH A number or a vector of the beta of the hypothesis,
+#'     e.g. L beta=L betaH. If `smallModel` is a model object then betaH=0.
 #' @param details If larger than 0 some timing details are printed.
-#' @note This functionality is not thoroughly tested and should be used with
-#'     care. Please do report bugs etc.
 #'
 #' @author Ulrich Halekoh \email{uhalekoh@@health.sdu.dk}, Søren Højsgaard
 #'     \email{sorenh@@math.aau.dk}
 #' 
-#' @seealso \code{\link{getKR}}, \code{\link{lmer}}, \code{\link{vcovAdj}},
-#'     \code{\link{PBmodcomp}}
+#' @seealso \code{\link{getKR}}, \code{\link[lme4]{lmer}},
+#'     \code{\link{vcovAdj}}, \code{\link{PBmodcomp}},
+#'     \code{\link{SATmodcomp}}
 #' 
-#' @references Ulrich Halekoh, Søren Højsgaard (2014)., A Kenward-Roger
-#'     Approximation and Parametric Bootstrap Methods for Tests in Linear Mixed
-#'     Models - The R Package pbkrtest., Journal of Statistical Software,
-#'     58(10), 1-30., \url{https://www.jstatsoft.org/v59/i09/}
+#' @references Ulrich Halekoh, Søren Højsgaard (2014)., A
+#'     Kenward-Roger Approximation and Parametric Bootstrap Methods
+#'     for Tests in Linear Mixed Models - The R Package pbkrtest.,
+#'     Journal of Statistical Software, 58(10), 1-30.,
+#'     \url{https://www.jstatsoft.org/v59/i09/}
 #' 
 #' Kenward, M. G. and Roger, J. H. (1997), \emph{Small Sample Inference for
 #' Fixed Effects from Restricted Maximum Likelihood}, Biometrics 53: 983-997.
@@ -64,35 +76,57 @@
 #' @keywords models inference
 #' @examples
 #' 
-#' (fmLarge <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
-#' ## removing Days
-#' (fmSmall <- lmer(Reaction ~ 1 + (Days|Subject), sleepstudy))
-#' anova(fmLarge, fmSmall)
-#' KRmodcomp(fmLarge, fmSmall)
+#' (fm0 <- lmer(Reaction ~ (Days|Subject), sleepstudy))
+#' (fm1 <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy))
+#' (fm2 <- lmer(Reaction ~ Days + I(Days^2) + (Days|Subject), sleepstudy))
+#'
+#' ## Test for no effect of Days in fm1, i.e. test fm0 under fm1
+#' KRmodcomp(fm1, "Days")
+#' KRmodcomp(fm1, ~.-Days)
+#' L1 <- cbind(0, 1) 
+#' KRmodcomp(fm1, L1)
+#' KRmodcomp(fm1, fm0)
+#' anova(fm1, fm0)
+#'
+#' ## Test for no effect of Days and Days-squared in fm2, i.e. test fm0 under fm2
+#' KRmodcomp(fm2, "(Days+I(Days^2))")
+#' KRmodcomp(fm2, ~. - Days - I(Days^2))
+#' L2 <- rbind(c(0, 1, 0), c(0, 0, 1))
+#' KRmodcomp(fm2, L2)
+#' KRmodcomp(fm2, fm0)
+#' anova(fm2, fm0)
 #' 
-#' ## The same test using a restriction matrix
-#' L <- cbind(0, 1)
-#' KRmodcomp(fmLarge, L)
-#' 
-#' ## Same example, but with independent intercept and slope effects:
-#' m.large  <- lmer(Reaction ~ Days + (1|Subject) + (0+Days|Subject), data = sleepstudy)
-#' m.small  <- lmer(Reaction ~ 1 + (1|Subject) + (0+Days|Subject), data = sleepstudy)
-#' anova(m.large, m.small)
-#' KRmodcomp(m.large, m.small)
-#' 
-#' 
+#' ## Test for no effect of Days-squared in fm2, i.e. test fm1 under fm2
+#' KRmodcomp(fm2, "I(Days^2)")
+#' KRmodcomp(fm2, ~. - I(Days^2))
+#' L3 <- rbind(c(0, 0, 1))
+#' KRmodcomp(fm2, L3)
+#' KRmodcomp(fm2, fm1)
+#' anova(fm2, fm1)
+
+
+
+
+
+
+
+
+
 
 #' @export
-#' @rdname kr-modcomp
+#' @rdname kr_modcomp
 KRmodcomp <- function(largeModel, smallModel, betaH=0, details=0){
     UseMethod("KRmodcomp")
 }
 
 
 #' @export
-#' @rdname kr-modcomp
+#' @rdname kr_modcomp
 KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
 
+    if (is.character(smallModel))
+        smallModel <- doBy::formula_add_str(formula(largeModel), terms=smallModel, op="-")
+    
     if (inherits(smallModel, "formula"))
         smallModel  <- update(largeModel, smallModel)
             
@@ -138,7 +172,7 @@ KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
     out
 }
 
-## #' @rdname kr-modcomp
+## #' @rdname kr_modcomp
 ## KRmodcomp.mer <- KRmodcomp.lmerMod
 
 .finalizeKR <- function(stats){
@@ -212,7 +246,7 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
   V0<-1 + c1*B
   V1<-1 - c2*B
   V2<-1 - c3*B
-  V0<-ifelse(abs(V0)<1e-10, 0, V0)
+  V0<-ifelse(abs(V0) < 1e-10, 0, V0)
   
   ##  cat(sprintf("V0=%f V1=%f V2=%f\n", V0, V1, V2))
 
@@ -220,8 +254,8 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
 ###orgDef: rho <-  V/(2*E^2)
 
   ## str(list(q=q, A2=A2, V1=V1, V0=V0, V2=V2))
-  rho <- 1/q * (.divZero(1-A2/q,V1))^2 * V0/V2
-  df2 <- 4 + (q+2)/ (q*rho-1)          ## Here are the adjusted degrees of freedom.
+  rho <- 1/q * (.divZero(1 - A2 / q, V1))^2 * V0 / V2
+  df2 <- 4 + (q + 2) / (q * rho - 1)          ## Here are the adjusted degrees of freedom.
 
 ###orgDef: F.scaling <-  df2 /(E*(df2-2))
 ###altCalc F.scaling<- df2 * .divZero(1-A2/q,df2-2,tol=1e-12)
@@ -234,19 +268,26 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
 
 ### The F-statistic; scaled and unscaled
   betaDiff <- cbind( beta - betaH )
-  Wald     <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L %*% PhiA %*% t(L), L %*% betaDiff))
-  WaldU    <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L %*% Phi %*% t(L), L %*% betaDiff))
 
+  
+  ## Wald     <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L %*% PhiA %*% t(L), L %*% betaDiff))
+  ## WaldU    <- as.numeric(t(betaDiff) %*% t(L) %*% solve(L %*% Phi %*% t(L), L %*% betaDiff))
+
+  Lb2 <- L %*% betaDiff
+  Wald     <- as.numeric(t(Lb2) %*% solve(L %*% PhiA %*% t(L), Lb2))
+  WaldU    <- as.numeric(t(Lb2) %*% solve(L %*% Phi  %*% t(L), Lb2))
+
+  
   FstatU <- Wald / q
   pvalU  <- pf(FstatU, df1=q, df2=df2, lower.tail=FALSE)
 
   Fstat  <- F.scaling * FstatU
   pval   <- pf(Fstat, df1=q, df2=df2, lower.tail=FALSE)
 
-  stats<-list(ndf=q, ddf=df2,
-              Fstat  = Fstat,  p.value=pval, F.scaling=F.scaling,
-              FstatU = FstatU, p.valueU = pvalU,
-              aux = aux)
+  stats <- list(ndf=q, ddf=df2,
+                Fstat  = Fstat,  p.value=pval, F.scaling=F.scaling,
+                FstatU = FstatU, p.valueU = pvalU,
+                aux = aux)
   stats
 
 }
@@ -322,44 +363,3 @@ summary.KRmodcomp <- function(object, ...){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  #stats <- .KRmodcompPrimitive(largeModel, L, betaH, details)
-
-
-## .KRmodcompPrimitive<-function(largeModel, L, betaH, details) {
-##   PhiA<-vcovAdj(largeModel, details)
-##   .KR_adjust(PhiA, Phi=vcov(largeModel), L, beta=fixef(largeModel), betaH )
-## }
-
-
-### SHD addition: calculate bartlett correction and gamma approximation
-###
-##   ## Bartlett correction - X2 distribution
-##   BCval   <- 1 / EE
-##   BCstat  <- BCval * Wald
-##   p.BC    <- 1-pchisq(BCstat,df=q)
-## #  cat(sprintf("Wald=%f BCval=%f BC.stat=%f p.BC=%f\n", Wald, BCval, BCstat, p.BC))
-##   ## Gamma distribution
-##   scale   <- q*VV/EE
-##   shape   <- EE^2/VV
-##   p.Ga    <- 1-pgamma(Wald, shape=shape, scale=scale)
-## #  cat(sprintf("shape=%f scale=%f p.Ga=%f\n", shape, scale, p.Ga))
