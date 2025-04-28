@@ -127,6 +127,12 @@ PBrefdist <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, det
 PBrefdist.lm <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
   t0 <- proc.time()
 
+  nr_data <- nrow(eval(largeModel$call$data))
+  nr_fit  <- nrow(largeModel$model)
+  
+  if (nr_data != nr_fit)
+    stop("Number of rows in data and fit do not match; remove NAs from data before fitting\n")
+  
   ref <- do_sampling(largeModel, smallModel, nsim, cl, details)
   
   ## ref <- ref[ref > 0]
@@ -168,15 +174,24 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
     ## From here: largeModel and smallModel are both model objects.
     
     if (getME(smallModel, "is_REML")) {
-        smallModel <- update(smallModel, REML=FALSE)
+        smallModel <- update(smallModel, REML=FALSE, control=lmerControl(check.conv.singular = "ignore"))
     }
 
     if (getME(largeModel, "is_REML")){
-        largeModel <- update(largeModel, REML=FALSE)  
+        largeModel <- update(largeModel, REML=FALSE, control=lmerControl(check.conv.singular = "ignore"))  
     } 
 
+    nr_data <- nrow(getData(largeModel))
+    nr_fit  <- getME(largeModel, "n")
+    
+    if (nr_data != nr_fit)
+      stop("Number of rows in data and fit do not match; remove NAs from data before fitting\n")
+    
+    
     t0 <- proc.time()
 
+    ## cat("PBrefdist cl:\n"); print(cl)
+    
     ref <- do_sampling(largeModel, smallModel, nsim, cl, details)
     
     LRTstat     <- getLRT(largeModel, smallModel)
@@ -187,12 +202,82 @@ PBrefdist.merMod <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NU
                               n.extreme = sum(ref > LRTstat["tobs"]),
                               pPB       = (1 + sum(ref > LRTstat["tobs"])) / (1 + sum(ref > 0)))
     class(ref) <- "refdist"
-    if (details>0)
+    if (details > 0)
         cat(sprintf("Reference distribution with %5i samples; computing time: %5.2f secs. \n",
                     length(ref), attr(ref, "ctime")))
     
     ref
 }
+
+
+
+#' @rdname pb-refdist
+#' @export
+PBrefdist.gls <- function(largeModel, smallModel, nsim=1000, seed=NULL, cl=NULL, details=0){
+
+    if (is.character(smallModel))
+        smallModel <- doBy::formula_add_str(formula(largeModel), terms=smallModel, op="-")
+    
+    if (inherits(smallModel, "formula"))
+        smallModel  <- update(largeModel, smallModel)
+
+    if (is.numeric(smallModel) && !is.matrix(smallModel))
+        smallModel <- matrix(smallModel, nrow=1)
+            
+    if (inherits(smallModel, c("Matrix", "matrix"))){
+        formula.small <- smallModel
+        smallModel <- restriction_matrix2model(largeModel, smallModel, REML=FALSE)
+    } else {
+        formula.small <- formula(smallModel)
+        attributes(formula.small) <- NULL
+    }
+
+    ## From here: largeModel and smallModel are both model objects.
+
+    smallModel <- update(smallModel, method="ML")
+    largeModel <- update(largeModel, method="ML")
+
+    ## print(largeModel)
+    
+    nr_data <- nrow(getData(largeModel))
+    nr_fit  <- largeModel$dims$N
+    
+    if (nr_data != nr_fit)
+      stop("Number of rows in data and fit do not match; remove NAs from data before fitting\n")
+    
+    t0 <- proc.time()
+    ref <- do_sampling(largeModel, smallModel, nsim, cl, details)
+    
+    LRTstat     <- getLRT(largeModel, smallModel)
+
+    attr(ref, "stat")    <- LRTstat
+    attr(ref, "samples") <- c(nsim      = nsim,
+                              npos      = sum(ref > 0),
+                              n.extreme = sum(ref > LRTstat["tobs"]),
+                              pPB       = (1 + sum(ref > LRTstat["tobs"])) / (1 + sum(ref > 0)))
+    class(ref) <- "refdist"
+    if (details > 0)
+        cat(sprintf("Reference distribution with %5i samples; computing time: %5.2f secs. \n",
+                    length(ref), attr(ref, "ctime")))
+    
+    ref
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 print.refdist <- function(x, n=6L, ...){
     cat("values: \n")
@@ -246,7 +331,7 @@ get_refdist.lm <- function(lg){
 
 .get_refdist_merMod <- function(lg, sm, nsim=20, seed=NULL,
                                 simdata=simulate(sm, nsim=nsim, seed=seed)){
-                                        #simdata <- simulate(sm, nsim=nsim, seed=seed)
+
     unname(unlist(lapply(simdata, function(yyy){
         sm2  <- suppressMessages(refit(sm, newresp=yyy))
         lg2  <- suppressMessages(refit(lg, newresp=yyy))
@@ -305,7 +390,7 @@ do_sampling <- function(largeModel, smallModel, nsim, cl, details=0){
     dd <- details
 
     get_fun <- get_refdist(largeModel)
-    
+
     cl <- get_cl(cl)
         
     if (is.numeric(cl)){
@@ -319,6 +404,12 @@ do_sampling <- function(largeModel, smallModel, nsim, cl, details=0){
                                function(i) {
                                    get_fun(largeModel, smallModel, nsim=nsim.cl)},
                                mc.cores=cl))
+
+        # ref <- unlist(lapply(1:cl,
+        #                        function(i) {
+        #                            get_fun(largeModel, smallModel, nsim=nsim.cl)}
+        #                        ))
+
 
     } else
         if (inherits(cl, "cluster")){
@@ -336,12 +427,3 @@ do_sampling <- function(largeModel, smallModel, nsim, cl, details=0){
 
 }
 
-
-
-    ## w <- modcomp_init(largeModel, smallModel, matrixOK = TRUE)
-
-    ## if (w == -1) stop('Models have equal mean stucture or are not nested')
-    ## if (w == 0){
-    ##     ## First given model is submodel of second; exchange the models
-    ##     tmp <- largeModel; largeModel <- smallModel; smallModel <- tmp
-    ## }

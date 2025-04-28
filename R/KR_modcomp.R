@@ -4,7 +4,7 @@
 #' 
 #' @description An approximate F-test based on the Kenward-Roger approach.
 #' @concept model_comparison
-#' @name kr_modcomp
+#' @name kr__modcomp
 #' 
 ## ##########################################################################
 #' @details
@@ -105,24 +105,21 @@
 #' anova(fm2, fm1)
 
 
-
-
-
-
-
-
-
-
 #' @export
-#' @rdname kr_modcomp
+#' @rdname kr__modcomp
 KRmodcomp <- function(largeModel, smallModel, betaH=0, details=0){
     UseMethod("KRmodcomp")
 }
 
 
 #' @export
-#' @rdname kr_modcomp
+#' @rdname kr__modcomp
 KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
+    KRmodcomp_internal(largeModel=largeModel, smallModel=smallModel, betaH=betaH, details=details)
+}
+
+
+KRmodcomp_internal <- function(largeModel, smallModel, betaH=0, details=0) {
 
     if (is.character(smallModel))
         smallModel <- doBy::formula_add_str(formula(largeModel), terms=smallModel, op="-")
@@ -142,6 +139,15 @@ KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
     if (!(getME(largeModel, "is_REML"))){
         largeModel <- update(largeModel, .~., REML=TRUE)
     }
+
+    KRmodcomp_worker(largeModel, smallModel, betaH=betaH, details=details)    
+}
+
+
+KRmodcomp_worker <- function(largeModel, smallModel, betaH=0, details=0) {
+
+    if (is.null(betaH)) betaH <- 0
+    if (is.null(details)) details <- 0
     
     ## All computations are based on 'largeModel' and the restriction matrix 'L'
     ## -------------------------------------------------------------------------
@@ -170,10 +176,9 @@ KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
     out$ctime   <- (proc.time() - t0)[3]
     out$L       <- L
     out
+    
 }
 
-## #' @rdname kr_modcomp
-## KRmodcomp.mer <- KRmodcomp.lmerMod
 
 .finalizeKR <- function(stats){
     
@@ -189,7 +194,7 @@ KRmodcomp.lmerMod <- function(largeModel, smallModel, betaH=0, details=0) {
 }
 
 
-KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
+KRmodcomp_internal2 <- function(largeModel, LL, betaH=0, details=0){
     
     PhiA  <- vcovAdj(largeModel, details)
     stats <- .KR_adjust(PhiA, Phi=vcov(largeModel), LL, beta=fixef(largeModel), betaH)
@@ -277,7 +282,6 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
   Wald     <- as.numeric(t(Lb2) %*% solve(L %*% PhiA %*% t(L), Lb2))
   WaldU    <- as.numeric(t(Lb2) %*% solve(L %*% Phi  %*% t(L), Lb2))
 
-  
   FstatU <- Wald / q
   pvalU  <- pf(FstatU, df1=q, df2=df2, lower.tail=FALSE)
 
@@ -289,7 +293,6 @@ KRmodcomp_internal <- function(largeModel, LL, betaH=0, details=0){
                 FstatU = FstatU, p.valueU = pvalU,
                 aux = aux)
   stats
-
 }
 
 .KRcommon <- function(x){
